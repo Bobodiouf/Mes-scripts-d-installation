@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+echo "#########################################################################################################"
+echo "#                                                                                                       #"
+echo "#   _       __     __ _______ ________ _______________ _____         ___  _____   .-------\ ______      #"
+echo "#  | |     |  \   /  |__  ___|     ___|  ____|_   ___ \\__  \       /  _|_  ___| /  ------//  ____||    #"
+echo "#  | |     | |\\_//| |  | |  `.___ `.   |_____ | |   | || \  \     /  /   | |   |  |       -  |_____    #"
+echo "#  | |     | | \_/ | |  | | ______)  ||  ____//| |___/ //  \  \   /  /    | |   |  |        |  ____//   #"
+echo "#  | |____ | |   	 | |__| |/   ______|| |_____ | |___ \\_  _\  \_// /_  __| |__ |  |       _| |         #"
+echo "#  \\_____/|_|  	 |_\\_______\______/________//_|   |___|\\________//\\_______| \\ \_____| ------- \\  #"
+echo "#   --------------------------------------------------------------------------------------//________//  #"
+echo "#                                 LMI SERVICE - Auteur : ISMAEL MOULOUNGUI                              #"
+echo "#########################################################################################################"
 echo "=== Mise à jour du système ==="
 sudo apt update -y
 sudo apt dist-upgrade -y
@@ -34,6 +45,19 @@ if ! dpkg --get-selections | grep php; then
     sudo apt autoremove --purge
 else
     echo "PHP est déjà installé."
+fi
+
+echo "=== Vérification de Mariadb ==="
+if ! dpkg --get-selections | grep mariadb-server; then
+    echo "Installation de MariaDB"
+    sudo apt install mariadb-server -y
+    sudo systemctl enable mariadb
+    sudo systemctl start mariadb
+else
+    echo "MariaDB est déjà installé."
+    sudo systemctl reload mariadb
+    sudo systemctl enable mariadb
+    sudo systemctl start mariadb
 fi
 
 echo "=== Installation de Passbolt depuis le site officiel ==="
