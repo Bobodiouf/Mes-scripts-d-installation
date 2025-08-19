@@ -1,4 +1,4 @@
-I.	Déploiement de PassBolt 
+## *I.	Déploiement de PassBolt*
 
 Dans le cadre de notre étude, et pour déployer PassBolt sur un Debian, quelques éléments prérequis sont nécessaires :
 -	Un serveur Debian 12 minimal.
@@ -7,7 +7,7 @@ Dans le cadre de notre étude, et pour déployer PassBolt sur un Debian, quelque
 -	Un service NTP fonctionnel pour éviter les problèmes d'authentification GPG
 -	La configuration serveur recommandée est : 2 cœurs et 2 Go de RAM.
 
-1.	Phases du déploiement 
+## 1.	Phases du déploiement 
 a.	Préparation du système et configuration réseau de base
 Avant toute installation ou déploiement de solution logicielle, il est essentiel de disposer d’un environnement système propre, stable et correctement configuré. Cette étape vise à préparer le serveur hôte en assurant la mise à jour du système d’exploitation, la définition des paramètres réseau de base (nom d’hôte, adresse IP statique, passerelle, DNS), ainsi que l’ouverture éventuelle des ports nécessaires au bon fonctionnement des services à venir.
 
