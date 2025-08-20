@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script de déploiement n8n sur Debian 12 avec MariaDB
-# Auteur: Ismael Mouloungui && Assistant Claude
+# Auteur: Assistant Claude
 # Version: 1.0
 
 set -e  # Arrêter le script en cas d'erreur
@@ -11,6 +11,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+RESET="\e[0m"
 NC='\033[0m' # No Color
 
 # Fonction pour afficher les messages
@@ -67,8 +68,34 @@ N8N_AUTH_USER=${N8N_AUTH_USER:-admin}
 read -s -p "Mot de passe pour l'interface n8n: " N8N_AUTH_PASSWORD
 echo
 
-# Demander l'URL publique
-read -p "URL publique de n8n (ex: https://n8n.mondomaine.com ou http://IP:5678): " WEBHOOK_URL
+# Demander l'URL publique et la configuration SSL
+echo -e "\n=== Configuration SSL et domaine ==="
+read -p "Voulez-vous configurer SSL ? (y/n) [y]: " SETUP_SSL
+SETUP_SSL=${SETUP_SSL:-y}
+
+if [[ $SETUP_SSL == "y" ]]; then
+    echo "Types de certificat SSL disponibles :"
+    echo "1) Certificat auto-signé (recommandé pour test/interne)"
+    echo "2) Let's Encrypt (domaine public requis)"
+    read -p "Choisissez le type de certificat (1/2) [1]: " SSL_TYPE
+    SSL_TYPE=${SSL_TYPE:-1}
+    
+    if [[ $SSL_TYPE == "2" ]]; then
+        read -p "Nom de domaine pour n8n (ex: n8n.mondomaine.com): " DOMAIN_NAME
+        while [[ -z "$DOMAIN_NAME" ]]; do
+            log_error "Le nom de domaine est requis pour Let's Encrypt"
+            read -p "Nom de domaine pour n8n (ex: n8n.mondomaine.com): " DOMAIN_NAME
+        done
+        read -p "Email pour Let's Encrypt [admin@$DOMAIN_NAME]: " LETSENCRYPT_EMAIL
+        LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-admin@$DOMAIN_NAME}
+    else
+        read -p "Nom de domaine/IP pour le certificat (ex: n8n.local ou IP) [n8n.local]: " DOMAIN_NAME
+        DOMAIN_NAME=${DOMAIN_NAME:-n8n.local}
+    fi
+    WEBHOOK_URL="https://$DOMAIN_NAME"
+else
+    read -p "URL publique de n8n (ex: http://IP:5678): " WEBHOOK_URL
+fi
 
 log_info "Début de l'installation de n8n..."
 
@@ -131,7 +158,7 @@ N8N_LOG_OUTPUT=file
 N8N_LOG_FILE_LOCATION=$N8N_HOME/.n8n/logs/n8n.log
 
 # Sécurité
-N8N_SECURE_COOKIE=false
+N8N_SECURE_COOKIE=$([ "$SETUP_SSL" == "y" ] && echo "true" || echo "false")
 N8N_BLOCK_ENV_ACCESS_IN_NODE=true
 
 # Performance
@@ -202,13 +229,138 @@ systemctl daemon-reload
 systemctl enable n8n
 log_success "Service systemd créé et activé"
 
-# 10. Configuration du pare-feu (si ufw est installé)
-if command -v ufw &> /dev/null; then
-    log_info "Configuration du pare-feu..."
-    ufw allow $N8N_PORT/tcp
-    log_success "Port $N8N_PORT autorisé dans le pare-feu"
+# 10. Configuration SSL avec nginx et Let's Encrypt (si demandé)
+if [[ $SETUP_SSL == "y" ]]; then
+    log_info "Installation et configuration de nginx avec SSL..."
+    
+    # Installation nginx et certbot
+    apt install -y nginx certbot python3-certbot-nginx
+    
+    # Configuration nginx pour n8n
+    cat > /etc/nginx/sites-available/n8n << EOF
+server {
+    listen 80;
+    server_name $DOMAIN_NAME;
+    
+    # Redirection forcée vers HTTPS
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN_NAME;
+    
+    # Configuration SSL (sera complétée par certbot)
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
+    
+    # Configuration SSL moderne
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # Sécurité headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    
+    # Configuration pour n8n
+    client_max_body_size 50M;
+    
+    location / {
+        proxy_pass http://127.0.0.1:$N8N_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        
+        # Timeouts pour les workflows longs
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 300s;
+        
+        # Buffers
+        proxy_buffering off;
+        proxy_buffer_size 4k;
+    }
+    
+    # Gestion des webhooks
+    location ~* ^/webhook/ {
+        proxy_pass http://127.0.0.1:$N8N_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+    
+    # Activer le site
+    ln -sf /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/
+    rm -f /etc/nginx/sites-enabled/default
+    
+    # Tester la configuration nginx
+    if nginx -t; then
+        log_success "Configuration nginx validée"
+    else
+        log_error "Erreur dans la configuration nginx"
+        exit 1
+    fi
+    
+    # Démarrer nginx
+    systemctl enable nginx
+    systemctl start nginx
+    
+    # Obtenir le certificat SSL
+    log_info "Obtention du certificat SSL avec Let's Encrypt..."
+    log_warning "Assurez-vous que votre domaine $DOMAIN_NAME pointe vers cette IP !"
+    
+    # Configuration automatique avec certbot
+    certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $LETSENCRYPT_EMAIL --redirect
+    
+    if [ $? -eq 0 ]; then
+        log_success "Certificat SSL installé avec succès"
+        
+        # Configuration du renouvellement automatique
+        echo "0 12 * * * /usr/bin/certbot renew --quiet" | crontab -
+        log_success "Renouvellement automatique configuré"
+        
+        # Mise à jour de la configuration n8n pour HTTPS
+        sed -i 's/N8N_PROTOCOL=http/N8N_PROTOCOL=https/' $N8N_HOME/.n8n/.env
+        
+    else
+        log_error "Erreur lors de l'obtention du certificat SSL"
+        log_warning "Vous pouvez réessayer manuellement avec: certbot --nginx -d $DOMAIN_NAME"
+    fi
+    
+    # Configuration du pare-feu pour HTTPS
+    if command -v ufw &> /dev/null; then
+        ufw allow 80/tcp
+        ufw allow 443/tcp
+        log_success "Ports HTTP/HTTPS autorisés dans le pare-feu"
+    fi
+    
 else
-    log_warning "ufw non installé, configuration du pare-feu ignorée"
+    # Configuration du pare-feu standard
+    if command -v ufw &> /dev/null; then
+        log_info "Configuration du pare-feu..."
+        ufw allow $N8N_PORT/tcp
+        log_success "Port $N8N_PORT autorisé dans le pare-feu"
+    else
+        log_warning "ufw non installé, configuration du pare-feu ignorée"
+    fi
 fi
 
 # 11. Démarrage du service
@@ -231,11 +383,26 @@ fi
 
 # 12. Vérification de la connectivité
 log_info "Vérification de la connectivité..."
-sleep 2
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
-    log_success "n8n répond correctement sur le port $N8N_PORT"
+sleep 3
+
+if [[ $SETUP_SSL == "y" ]]; then
+    # Test HTTPS
+    if curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN_NAME | grep -q "200\|401"; then
+        log_success "n8n répond correctement sur HTTPS"
+    else
+        log_warning "n8n ne répond pas correctement sur HTTPS, vérifiez les logs"
+        # Test fallback sur HTTP local
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
+            log_info "n8n fonctionne en local, problème probablement lié à nginx/SSL"
+        fi
+    fi
 else
-    log_warning "n8n ne semble pas répondre correctement, vérifiez les logs"
+    # Test HTTP standard
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
+        log_success "n8n répond correctement sur le port $N8N_PORT"
+    else
+        log_warning "n8n ne semble pas répondre correctement, vérifiez les logs"
+    fi
 fi
 
 # 13. Création d'un script de gestion
@@ -254,13 +421,72 @@ case $1 in
         ;;
     restart)
         systemctl restart n8n
+        if systemctl is-active --quiet nginx; then
+            systemctl reload nginx
+        fi
         echo "n8n redémarré"
         ;;
     status)
-        systemctl status n8n
+        echo "=== Statut n8n ==="
+        systemctl status n8n --no-pager
+        if systemctl is-active --quiet nginx; then
+            echo -e "\n=== Statut nginx ==="
+            systemctl status nginx --no-pager
+        fi
         ;;
     logs)
         journalctl -u n8n -f
+        ;;
+    nginx-logs)
+        if systemctl is-active --quiet nginx; then
+            tail -f /var/log/nginx/access.log /var/log/nginx/error.log
+        else
+            echo "nginx n'est pas actif"
+        fi
+        ;;
+    ssl-renew)
+        if [[ -f /etc/nginx/ssl/n8n.crt ]]; then
+            echo "Régénération du certificat auto-signé..."
+            # Sauvegarde de l'ancien certificat
+            cp /etc/nginx/ssl/n8n.crt /etc/nginx/ssl/n8n.crt.backup
+            cp /etc/nginx/ssl/n8n.key /etc/nginx/ssl/n8n.key.backup
+            
+            # Régénération (valide 1 an de plus)
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                -keyout /etc/nginx/ssl/n8n.key \
+                -out /etc/nginx/ssl/n8n.crt \
+                -subj "/C=FR/ST=France/L=Paris/O=n8n/OU=IT/CN=n8n.local"
+            
+            chmod 600 /etc/nginx/ssl/n8n.key
+            chmod 644 /etc/nginx/ssl/n8n.crt
+            systemctl reload nginx
+            echo "Certificat auto-signé régénéré"
+        elif command -v certbot &> /dev/null; then
+            certbot renew
+            systemctl reload nginx
+            echo "Certificat Let's Encrypt renouvelé"
+        else
+            echo "Aucun certificat à renouveler"
+        fi
+        ;;
+    ssl-status)
+        if [[ -f /etc/nginx/ssl/n8n.crt ]]; then
+            echo "=== Certificat auto-signé ==="
+            openssl x509 -in /etc/nginx/ssl/n8n.crt -text -noout | grep -E "(Subject:|Not After:|DNS:|IP Address:)"
+        elif command -v certbot &> /dev/null; then
+            echo "=== Certificats Let's Encrypt ==="
+            certbot certificates
+        else
+            echo "Aucun certificat SSL trouvé"
+        fi
+        ;;
+    ssl-info)
+        if [[ -f /etc/nginx/ssl/n8n.crt ]]; then
+            echo "=== Informations complètes du certificat auto-signé ==="
+            openssl x509 -in /etc/nginx/ssl/n8n.crt -text -noout
+        else
+            echo "Certificat auto-signé non trouvé"
+        fi
         ;;
     update)
         npm update n8n -g
@@ -273,7 +499,7 @@ case $1 in
         echo "Sauvegarde créée: /home/n8n/backup_n8n_$timestamp"
         ;;
     *)
-        echo "Usage: n8n-manage {start|stop|restart|status|logs|update|backup}"
+        echo "Usage: n8n-manage {start|stop|restart|status|logs|nginx-logs|ssl-renew|ssl-status|ssl-info|update|backup}"
         exit 1
         ;;
 esac
@@ -299,14 +525,57 @@ echo "Commandes utiles:"
 echo "- Statut du service: systemctl status n8n"
 echo "- Logs en temps réel: journalctl -u n8n -f"
 echo "- Redémarrer: systemctl restart n8n"
-echo "- Script de gestion: n8n-manage {start|stop|restart|status|logs|update|backup}"
+echo "- Script de gestion: n8n-manage {start|stop|restart|status|logs|nginx-logs|ssl-renew|ssl-status|ssl-info|update|backup}"
 echo
 echo "Fichiers importants:"
 echo "- Configuration: $N8N_HOME/.n8n/.env"
 echo "- Logs: $N8N_HOME/.n8n/logs/n8n.log"
 echo "- Service: /etc/systemd/system/n8n.service"
+if [[ $SETUP_SSL == "y" ]]; then
+    echo "- Configuration nginx: /etc/nginx/sites-available/n8n"
+    if [[ $SSL_TYPE == "1" ]]; then
+        echo "- Certificat SSL auto-signé: /etc/nginx/ssl/n8n.crt"
+        echo "- Clé privée SSL: /etc/nginx/ssl/n8n.key"
+    else
+        echo "- Certificat SSL Let's Encrypt: /etc/letsencrypt/live/$DOMAIN_NAME/"
+    fi
+fi
 echo
+# Texte de la bannière ASCII
+banner=$(cat <<'EOF'
+
+██╗░░░░░███╗░░░███╗██╗  ░██████╗███████╗██████╗░██╗░░░██╗██╗░█████╗░███████╗
+██║░░░░░████╗░████║██║  ██╔════╝██╔════╝██╔══██╗██║░░░██║██║██╔══██╗██╔════╝
+██║░░░░░██╔████╔██║██║  ╚█████╗░█████╗░░██████╔╝╚██╗░██╔╝██║██║░░╚═╝█████╗░░
+██║░░░░░██║╚██╔╝██║██║  ░╚═══██╗██╔══╝░░██╔══██╗░╚████╔╝░██║██║░░██╗██╔══╝░░
+███████╗██║░╚═╝░██║██║  ██████╔╝███████╗██║░░██║░░╚██╔╝░░██║╚█████╔╝███████╗
+╚══════╝╚═╝░░░░░╚═╝╚═╝  ╚═════╝░╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚═╝░╚════╝░╚══════╝
+EOF
+)
+
+# Effet machine à écrire
+for (( i=0; i<${#banner}; i++ )); do
+    echo -ne "${GREEN}${banner:$i:1}${RESET}"
+    sleep 0.002  # Vitesse (0.002 = rapide, 0.05 = lent)
+done
+
+echo -e "\n${GREEN}---------------------------------------------------------------${RESET}"
+echo -e "${GREEN}        LMI SERVICE - Administration & Sécurité IT${RESET}"
+echo -e "${GREEN}---------------------------------------------------------------${RESET}"
+
 log_info "Pour accéder à l'interface, ouvrez votre navigateur sur: $WEBHOOK_URL"
+if [[ $SETUP_SSL == "y" && $SSL_TYPE == "1" ]]; then
+    echo
+    log_warning "🔒 CERTIFICAT AUTO-SIGNÉ DÉTECTÉ"
+    log_info "Votre navigateur affichera un avertissement de sécurité"
+    log_info "Actions à effectuer dans votre navigateur :"
+    echo "   • Chrome/Edge : Cliquez sur 'Paramètres avancés' puis 'Continuer vers $DOMAIN_NAME'"
+    echo "   • Firefox : Cliquez sur 'Paramètres avancés' puis 'Accepter le risque'"
+    echo "   • Safari : Cliquez sur 'Afficher les détails' puis 'Visiter ce site web'"
+    echo
+    log_info "💡 Pour éviter cet avertissement, ajoutez $DOMAIN_NAME à votre fichier hosts :"
+    echo "   sudo echo '$(hostname -I | awk '{print $1}') $DOMAIN_NAME' >> /etc/hosts"
+fi
 
 # Afficher le statut final
 echo
