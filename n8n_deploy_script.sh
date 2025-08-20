@@ -101,13 +101,13 @@ log_info "Début de l'installation de n8n..."
 
 # 1. Mise à jour du système
 log_info "Mise à jour du système..."
-apt update && apt upgrade -y
+sudo apt update && apt upgrade -y
 log_success "Système mis à jour"
 
 # 2. Installation de Node.js 20
 log_info "Installation de Node.js 20..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
+sudo apt-get install -y nodejs
 log_success "Node.js installé: $(node --version)"
 
 # 3. Création de l'utilisateur n8n
@@ -121,7 +121,7 @@ fi
 
 # 4. Installation de n8n
 log_info "Installation de n8n..."
-npm install n8n -g
+sudo npm install n8n -g
 log_success "n8n installé globalement"
 
 # 5. Création du répertoire de configuration
@@ -131,7 +131,7 @@ sudo -u $N8N_USER mkdir -p $N8N_HOME/.n8n
 
 # 6. Création du fichier de configuration
 log_info "Création du fichier de configuration..."
-cat > $N8N_HOME/.n8n/.env << EOF
+sudo cat > $N8N_HOME/.n8n/.env << EOF
 # Configuration générale
 N8N_HOST=$N8N_HOST
 N8N_PORT=$N8N_PORT
@@ -166,7 +166,7 @@ EXECUTIONS_DATA_PRUNE=true
 EXECUTIONS_DATA_MAX_AGE=168
 EOF
 
-chown -R $N8N_USER:$N8N_USER $N8N_HOME/.n8n
+sudo chown -R $N8N_USER:$N8N_USER $N8N_HOME/.n8n
 log_success "Fichier de configuration créé"
 
 # 7. Création du répertoire de logs
@@ -188,7 +188,7 @@ fi
 
 # 9. Création du service systemd
 log_info "Création du service systemd..."
-cat > /etc/systemd/system/n8n.service << EOF
+sudo cat > /etc/systemd/system/n8n.service << EOF
 [Unit]
 Description=n8n workflow automation
 After=network.target mariadb.service
@@ -225,8 +225,8 @@ RestrictSUIDSGID=true
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable n8n
+sudo systemctl daemon-reload
+sudo systemctl enable n8n
 log_success "Service systemd créé et activé"
 
 # 10. Configuration SSL avec nginx et Let's Encrypt (si demandé)
@@ -234,10 +234,10 @@ if [[ $SETUP_SSL == "y" ]]; then
     log_info "Installation et configuration de nginx avec SSL..."
     
     # Installation nginx et certbot
-    apt install -y nginx certbot python3-certbot-nginx
+    sudo apt install -y nginx certbot python3-certbot-nginx
     
     # Configuration nginx pour n8n
-    cat > /etc/nginx/sites-available/n8n << EOF
+    sudo cat > /etc/nginx/sites-available/n8n << EOF
 server {
     listen 80;
     server_name $DOMAIN_NAME;
@@ -308,8 +308,8 @@ server {
 EOF
     
     # Activer le site
-    ln -sf /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default
+    sudo ln -sf /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/
+    sudo rm -f /etc/nginx/sites-enabled/default
     
     # Tester la configuration nginx
     if nginx -t; then
@@ -320,15 +320,15 @@ EOF
     fi
     
     # Démarrer nginx
-    systemctl enable nginx
-    systemctl start nginx
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
     
     # Obtenir le certificat SSL
     log_info "Obtention du certificat SSL avec Let's Encrypt..."
     log_warning "Assurez-vous que votre domaine $DOMAIN_NAME pointe vers cette IP !"
     
     # Configuration automatique avec certbot
-    certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $LETSENCRYPT_EMAIL --redirect
+    sudo certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $LETSENCRYPT_EMAIL --redirect
     
     if [ $? -eq 0 ]; then
         log_success "Certificat SSL installé avec succès"
@@ -347,7 +347,7 @@ EOF
     
     # Configuration du pare-feu pour HTTPS
     if command -v ufw &> /dev/null; then
-        ufw allow 80/tcp
+        sudo ufw allow 80/tcp
         ufw allow 443/tcp
         log_success "Ports HTTP/HTTPS autorisés dans le pare-feu"
     fi
@@ -356,7 +356,7 @@ else
     # Configuration du pare-feu standard
     if command -v ufw &> /dev/null; then
         log_info "Configuration du pare-feu..."
-        ufw allow $N8N_PORT/tcp
+        sudo ufw allow $N8N_PORT/tcp
         log_success "Port $N8N_PORT autorisé dans le pare-feu"
     else
         log_warning "ufw non installé, configuration du pare-feu ignorée"
@@ -365,19 +365,20 @@ fi
 
 # 11. Démarrage du service
 log_info "Démarrage du service n8n..."
-systemctl start n8n
+sudo systemctl start n8n
+sudo systemctl start n8n
 
 # Attendre que le service démarre
 sleep 5
 
-if systemctl is-active --quiet n8n; then
+if sudo systemctl is-active --quiet n8n; then
     log_success "Service n8n démarré avec succès"
 else
     log_error "Erreur lors du démarrage du service n8n"
     log_info "Vérification du statut du service:"
-    systemctl status n8n --no-pager
+    sudo systemctl status n8n --no-pager
     log_info "Logs du service:"
-    journalctl -u n8n --no-pager -n 20
+    sudo journalctl -u n8n --no-pager -n 20
     exit 1
 fi
 
@@ -387,18 +388,18 @@ sleep 3
 
 if [[ $SETUP_SSL == "y" ]]; then
     # Test HTTPS
-    if curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN_NAME | grep -q "200\|401"; then
+    if sudo curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN_NAME | grep -q "200\|401"; then
         log_success "n8n répond correctement sur HTTPS"
     else
         log_warning "n8n ne répond pas correctement sur HTTPS, vérifiez les logs"
         # Test fallback sur HTTP local
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
+        if sudo curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
             log_info "n8n fonctionne en local, problème probablement lié à nginx/SSL"
         fi
     fi
 else
     # Test HTTP standard
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
+    if sudo curl -s -o /dev/null -w "%{http_code}" http://localhost:$N8N_PORT | grep -q "200\|401"; then
         log_success "n8n répond correctement sur le port $N8N_PORT"
     else
         log_warning "n8n ne semble pas répondre correctement, vérifiez les logs"
@@ -407,7 +408,7 @@ fi
 
 # 13. Création d'un script de gestion
 log_info "Création du script de gestion..."
-cat > /usr/local/bin/n8n-manage << 'EOF'
+sudo cat > /usr/local/bin/n8n-manage << 'EOF'
 #!/bin/bash
 
 case $1 in
@@ -505,7 +506,7 @@ case $1 in
 esac
 EOF
 
-chmod +x /usr/local/bin/n8n-manage
+sudo chmod +x /usr/local/bin/n8n-manage
 log_success "Script de gestion créé (/usr/local/bin/n8n-manage)"
 
 # Résumé final
@@ -580,4 +581,4 @@ fi
 # Afficher le statut final
 echo
 log_info "Statut actuel du service:"
-systemctl status n8n --no-pager -l
+sudo systemctl status n8n --no-pager -l
