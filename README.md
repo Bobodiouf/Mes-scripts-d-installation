@@ -1,4 +1,4 @@
-## *I.	Déploiement de PassBolt*
+# *I.	Déploiement de PassBolt*
 
 Dans le cadre de notre étude, et pour déployer PassBolt sur un Debian, quelques éléments prérequis sont nécessaires :
 -	Un serveur Debian 12 minimal.
@@ -94,6 +94,35 @@ Et voilà ;
 Figure 8: Image Assistant -Installation de l'extension sur firefox
  
 Figure 9: Extension Firefox
+
+# Utilisation du script
+
+Sauvegarde le script dans un fichier, par exemple install-n8n.sh
+Rends-le exécutable : chmod +x install-n8n.sh
+Lance l'installation : sudo ./install-n8n.sh
+
+Le script va te demander :
+
+Les informations de connexion à ta base MariaDB
+Un nom d'utilisateur et mot de passe pour l'interface n8n
+L'URL publique de ton instance
+
+Fonctionnalités du script
+
+Installation complète automatisée
+Configuration sécurisée avec authentification
+Service systemd pour démarrage automatique
+Script de gestion (n8n-manage) avec commandes utiles :
+
+n8n-manage start/stop/restart
+n8n-manage status/logs
+n8n-manage update (met à jour n8n)
+n8n-manage backup (sauvegarde la config)
+
+Après installation
+Le script créera automatiquement les tables nécessaires dans ta base MariaDB au premier démarrage. Tu peux vérifier que tout fonctionne avec :
+bashsystemctl status n8n
+journalctl -u n8n -f  # logs en temps réel
  
 
 
