@@ -210,19 +210,19 @@ services:
       DATASOURCES_DEFAULT_DATABASE: ${DB_NAME:-passbolt}
       
       # 🎯 CONFIGURATION GMAIL SMTP
-      EMAIL_TRANSPORT_DEFAULT_CLASS_NAME: Smtp
+       EMAIL_TRANSPORT_DEFAULT_CLASS_NAME: Smtp
       EMAIL_DEFAULT_FROM_NAME: ${EMAIL_FROM_NAME:-Passbolt Admin}
-      EMAIL_DEFAULT_FROM: ${EMAIL_FROM:-ton-email@gmail.com}
+      EMAIL_DEFAULT_FROM: ${EMAIL_FROM:-ismael.mouloungui@groupebatimat.com}
       EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
       EMAIL_TRANSPORT_DEFAULT_PORT: 587
-      EMAIL_TRANSPORT_DEFAULT_USERNAME: ${GMAIL_USERNAME:-ton-email@gmail.com}
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: ${GMAIL_USERNAME:-ismael.mouloungui@groupebatimat.com}
       EMAIL_TRANSPORT_DEFAULT_PASSWORD: ${GMAIL_APP_PASSWORD:-ton-mot-de-passe-app}
       EMAIL_TRANSPORT_DEFAULT_TLS: true
       EMAIL_TRANSPORT_DEFAULT_TIMEOUT: 30
       
       # Configuration GPG
       PASSBOLT_KEY_NAME: ${GPG_KEY_NAME:-Passbolt Server}
-      PASSBOLT_KEY_EMAIL: ${EMAIL_FROM:-ton-email@gmail.com}
+      PASSBOLT_KEY_EMAIL: ${EMAIL_FROM:-ismael.mouloungui@groupebatimat.com}
       
       # Sécurité
       PASSBOLT_REGISTRATION_PUBLIC: false
@@ -246,3 +246,230 @@ volumes:
   passbolt_gpg:
   passbolt_jwt:
   passbolt_images:
+----------------------------------------- Config .env -----------------------------------------------------------------------------------------------
+# =================================================
+# FICHIER .env POUR PASSBOLT
+# =================================================
+# ⚠️  IMPORTANT: Ne jamais commiter ce fichier !
+# Ajouter .env dans .gitignore
+
+# Configuration de l'application
+APP_URL=https://localhost
+# Pour production, remplace par ton vrai domaine :
+# APP_URL=https://passbolt.mondomaine.com
+
+# Configuration base de données
+DB_ROOT_PASSWORD=ChangeMoi_RootPassword123!
+DB_NAME=passbolt
+DB_USER=passbolt
+DB_PASSWORD=ChangeMoi_PassboltPassword123!
+
+# 📧 CONFIGURATION GMAIL SMTP
+EMAIL_FROM_NAME=Équipe Passbolt
+EMAIL_FROM=ismael.mouloungui@groupebatimat.com
+
+# 🔑 REMPLACE CES VALEURS PAR LES TIENNES
+GMAIL_USERNAME=ismael.mouloungui@groupebatimat.com
+GMAIL_APP_PASSWORD=abcd efgh ijkl mnop
+# ☝️ Le mot de passe d'application Gmail (16 caractères avec espaces)
+
+# Configuration GPG
+GPG_KEY_NAME=Passbolt Server Key
+
+# =================================================
+# COMMENT OBTENIR LE MOT DE PASSE D'APPLICATION GMAIL
+# =================================================
+# 
+# 1. Va sur myaccount.google.com
+# 2. Sécurité → Validation en 2 étapes (doit être activée)
+# 3. Mots de passe des applications → Sélectionner l'app "Mail"
+# 4. Générer → Noter le mot de passe (16 caractères)
+# 5. Remplacer GMAIL_APP_PASSWORD ci-dessus
+#
+# =================================================
+
+----------------------------------------------- Procédure de mise à jour ----------------------------------------------------------------------------
+# =================================================
+# PROCESSUS DE MISE À JOUR AVEC DOCKER ENGINE
+# =================================================
+
+# 1. MISE À JOUR DE LA CONFIGURATION
+# ==================================
+
+# Étape 1: Arrêter les services proprement
+docker compose down
+
+# Étape 2: Sauvegarder la configuration actuelle
+cp docker-compose.yml docker-compose.yml.backup.$(date +%Y%m%d)
+cp .env .env.backup.$(date +%Y%m%d) 2>/dev/null || true
+
+# Étape 3: Éditer la configuration
+nano docker-compose.yml
+# ou
+nano .env
+
+# Étape 4: Vérifier la nouvelle configuration
+docker compose config
+
+# Étape 5: Relancer avec la nouvelle config
+docker compose up -d
+
+# 2. MISE À JOUR DE L'IMAGE PASSBOLT
+# ==================================
+
+# Voir la version actuelle
+docker images | grep passbolt
+
+# Télécharger la nouvelle version
+docker pull passbolt/passbolt:latest-ce
+
+# Arrêter, mettre à jour et redémarrer
+docker compose down
+docker compose pull  # Met à jour toutes les images
+docker compose up -d
+
+# Vérifier les logs après mise à jour
+docker compose logs -f passbolt
+
+# 3. SAUVEGARDE AVANT MISE À JOUR
+# ===============================
+
+# Sauvegarder les volumes importants
+docker run --rm -v passbolt_db_data:/data -v $(pwd):/backup ubuntu tar czf /backup/passbolt_db_backup_$(date +%Y%m%d).tar.gz -C /data .
+
+docker run --rm -v passbolt_gpg:/data -v $(pwd):/backup ubuntu tar czf /backup/passbolt_gpg_backup_$(date +%Y%m%d).tar.gz -C /data .
+
+# Exporter la base de données
+docker exec passbolt_db mysqldump -u root -proot_password_super_secret passbolt > passbolt_db_dump_$(date +%Y%m%d).sql
+
+# 4. RESTAURATION EN CAS DE PROBLÈME
+# ==================================
+
+# Revenir à l'ancienne configuration
+docker compose down
+cp docker-compose.yml.backup.YYYYMMDD docker-compose.yml
+docker compose up -d
+
+# Restaurer un volume
+docker run --rm -v passbolt_db_data:/data -v $(pwd):/backup ubuntu bash -c "cd /data && tar xzf /backup/passbolt_db_backup_YYYYMMDD.tar.gz"
+
+# 5. SCRIPT D'AUTOMATISATION
+# ==========================
+
+#!/bin/bash
+# update_passbolt.sh
+
+set -e  # Arrêter en cas d'erreur
+
+echo "🔄 Mise à jour Passbolt..."
+
+# Sauvegarde
+echo "💾 Sauvegarde..."
+docker compose down
+cp docker-compose.yml docker-compose.yml.backup.$(date +%Y%m%d)
+
+# Mise à jour
+echo "⬇️ Téléchargement des nouvelles images..."
+docker compose pull
+
+# Redémarrage
+echo "🚀 Redémarrage..."
+docker compose up -d
+
+# Vérification
+echo "✅ Vérification..."
+sleep 30
+docker compose ps
+
+echo "✅ Mise à jour terminée !"
+------------------------------------------------ Fin ----------------------------------------------------------------------------------------------
+
+# =================================================
+# STACK PASSBOLT POUR PORTAINER AVEC GMAIL SMTP  
+# =================================================
+# À copier dans Portainer > Stacks > Add Stack
+
+services:
+  # Base de données MariaDB
+  passbolt_db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: ChangeMoi_RootPassword123!
+      MARIADB_DATABASE: passbolt
+      MARIADB_USER: passbolt
+      MARIADB_PASSWORD: ChangeMoi_PassboltPassword123!
+    volumes:
+      - passbolt_db_data:/var/lib/mysql
+    networks:
+      - passbolt_net
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 1m
+      start_interval: 10s
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  # Application Passbolt
+  passbolt_app:
+    image: passbolt/passbolt:4.7.0-1-ce
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      # Configuration de base
+      APP_FULL_BASE_URL: https://localhost:8443
+      
+      # Configuration base de données
+      DATASOURCES_DEFAULT_HOST: passbolt_db
+      DATASOURCES_DEFAULT_USERNAME: passbolt
+      DATASOURCES_DEFAULT_PASSWORD: ChangeMoi_PassboltPassword123!
+      DATASOURCES_DEFAULT_DATABASE: passbolt
+      
+      # 🎯 CONFIGURATION GMAIL SMTP
+      # ⚠️ REMPLACE CES VALEURS PAR LES TIENNES !
+      EMAIL_TRANSPORT_DEFAULT_CLASS_NAME: Smtp
+      EMAIL_DEFAULT_FROM_NAME: Support IT
+      EMAIL_DEFAULT_FROM: ismael.mouloungui@groupebatimat.com
+      EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
+      EMAIL_TRANSPORT_DEFAULT_PORT: 587
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: ismael.mouloungui@groupebatimat.com
+      EMAIL_TRANSPORT_DEFAULT_PASSWORD: TON-MOT-DE-PASSE-APP-GMAIL
+      EMAIL_TRANSPORT_DEFAULT_TLS: true
+      EMAIL_TRANSPORT_DEFAULT_TIMEOUT: 30
+      
+      # Configuration GPG
+      PASSBOLT_KEY_NAME: Passbolt Server Key
+      PASSBOLT_KEY_EMAIL: ismael.mouloungui@groupebatimat.com
+      
+      # Sécurité
+      PASSBOLT_REGISTRATION_PUBLIC: false
+      PASSBOLT_SSL_FORCE: true
+      
+    volumes:
+      - passbolt_gpg_data:/etc/passbolt/gpg
+      - passbolt_jwt_data:/etc/passbolt/jwt
+      - passbolt_images:/usr/share/php/passbolt/webroot/img/public/images
+    networks:
+      - passbolt_net
+    depends_on:
+      passbolt_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  passbolt_net:
+    driver: bridge
+
+volumes:
+  passbolt_db_data:
+    driver: local
+  passbolt_gpg_data:
+    driver: local
+  passbolt_jwt_data:
+    driver: local
+  passbolt_images:
+    driver: local
+----------------------------------------------- Fin -------------------------------------------------------------------------------------------------
