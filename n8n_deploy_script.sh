@@ -413,33 +413,33 @@ sudo cat > /usr/local/bin/n8n-manage << 'EOF'
 
 case $1 in
     start)
-        systemctl start n8n
+        sudo systemctl start n8n
         echo "n8n démarré"
         ;;
     stop)
-        systemctl stop n8n
+        sudo systemctl stop n8n
         echo "n8n arrêté"
         ;;
     restart)
-        systemctl restart n8n
-        if systemctl is-active --quiet nginx; then
-            systemctl reload nginx
+        sudo systemctl restart n8n
+        if sudo systemctl is-active --quiet nginx; then
+            sudo systemctl reload nginx
         fi
         echo "n8n redémarré"
         ;;
     status)
         echo "=== Statut n8n ==="
-        systemctl status n8n --no-pager
-        if systemctl is-active --quiet nginx; then
+        sudo systemctl status n8n --no-pager
+        if sudo systemctl is-active --quiet nginx; then
             echo -e "\n=== Statut nginx ==="
-            systemctl status nginx --no-pager
+            sudo systemctl status nginx --no-pager
         fi
         ;;
     logs)
-        journalctl -u n8n -f
+        sudo journalctl -u n8n -f
         ;;
     nginx-logs)
-        if systemctl is-active --quiet nginx; then
+        if sudo systemctl is-active --quiet nginx; then
             tail -f /var/log/nginx/access.log /var/log/nginx/error.log
         else
             echo "nginx n'est pas actif"
@@ -460,11 +460,11 @@ case $1 in
             
             chmod 600 /etc/nginx/ssl/n8n.key
             chmod 644 /etc/nginx/ssl/n8n.crt
-            systemctl reload nginx
+            sudo systemctl reload nginx
             echo "Certificat auto-signé régénéré"
         elif command -v certbot &> /dev/null; then
             certbot renew
-            systemctl reload nginx
+            sudo systemctl reload nginx
             echo "Certificat Let's Encrypt renouvelé"
         else
             echo "Aucun certificat à renouveler"
@@ -491,13 +491,13 @@ case $1 in
         ;;
     update)
         npm update n8n -g
-        systemctl restart n8n
+        sudo systemctl restart n8n
         echo "n8n mis à jour et redémarré"
         ;;
     backup)
         timestamp=$(date +%Y%m%d_%H%M%S)
-        sudo -u n8n cp -r /home/n8n/.n8n "/home/n8n/backup_n8n_$timestamp"
-        echo "Sauvegarde créée: /home/n8n/backup_n8n_$timestamp"
+        sudo -u n8n cp -r ~/.n8n "~/backup_n8n_$timestamp"
+        echo "Sauvegarde créée: ~/backup_n8n_$timestamp"
         ;;
     *)
         echo "Usage: n8n-manage {start|stop|restart|status|logs|nginx-logs|ssl-renew|ssl-status|ssl-info|update|backup}"

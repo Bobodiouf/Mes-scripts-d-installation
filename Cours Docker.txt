@@ -1,0 +1,788 @@
+=========================== Suppression complète de Docker =================================================
+
+# Arrêter tous les conteneurs en cours
+docker stop $(docker ps -q) 2>/dev/null || true
+
+# Supprimer tous les conteneurs
+docker rm $(docker ps -aq) 2>/dev/null || true
+
+# Supprimer toutes les images
+docker rmi $(docker images -q) 2>/dev/null || true
+
+# Nettoyer complètement le système Docker
+docker system prune -a --volumes --force 2>/dev/null || true
+
+# Arrêter le service Docker
+sudo systemctl stop docker
+sudo systemctl stop docker.socket
+sudo systemctl stop containerd
+
+# Désinstaller les paquets Docker
+sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Supprimer les dépendances orphelines
+sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce docker-ce-cli containerd.io
+
+# Supprimer le repository Docker
+sudo rm /etc/apt/sources.list.d/docker.list 2>/dev/null || true
+sudo rm /etc/apt/keyrings/docker.gpg 2>/dev/null || true
+
+# Supprimer le dossier principal de Docker
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+
+# Supprimer les fichiers de configuration
+sudo rm -rf /etc/docker
+sudo rm -rf ~/.docker
+
+# Supprimer les fichiers de service systemd
+sudo rm -f /etc/systemd/system/docker.service
+sudo rm -f /etc/systemd/system/docker.socket
+sudo rm -f /lib/systemd/system/docker.service
+sudo rm -f /lib/systemd/system/docker.socket
+
+# Recharger systemd
+sudo systemctl daemon-reload
+
+# Supprimer ton utilisateur du groupe docker
+sudo deluser $USER docker 2>/dev/null || true
+
+# Supprimer le groupe docker
+sudo groupdel docker 2>/dev/null || true
+
+# Supprimer les interfaces réseau Docker
+sudo ip link delete docker0 2>/dev/null || true
+sudo ip link delete br-* 2>/dev/null || true
+
+# Nettoyer iptables des règles Docker
+sudo iptables -t nat -F
+sudo iptables -t nat -X
+sudo iptables -t filter -F
+sudo iptables -t filter -X
+
+# Vérifier qu'il ne reste plus rien
+docker --version 2>/dev/null && echo "Docker encore présent" || echo "Docker complètement supprimé"
+sudo find / -name "*docker*" 2>/dev/null | grep -v proc | head -20
+
+==================================== Script Complet de suppression de docker ===============================================
+
+
+
+==================================== Installation de Docker ================================================================
+
+# Vérifier la version exacte de Debian
+cat /etc/os-release
+
+# Vérifier l'architecture (doit être x86_64)
+uname -m
+
+# Vérifier l'espace disque
+df -h
+
+# Mettre à jour le système
+sudo apt update && sudo apt upgrade -y
+
+# Installer les paquets nécessaires pour ajouter des repositories HTTPS
+sudo apt install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+# Créer le dossier pour les clés
+sudo mkdir -p /etc/apt/keyrings
+
+# Télécharger et ajouter la clé GPG de Docker
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Donner les bonnes permissions à la clé
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Ajouter le repository officiel Docker pour Debian
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Mettre à jour la liste des paquets avec le nouveau repository
+sudo apt update
+
+# Installer Docker Engine, CLI et containerd
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Démarrer et activer Docker au boot
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Vérifier que Docker tourne
+sudo systemctl status docker
+
+# Ajouter ton utilisateur au groupe docker
+sudo usermod -aG docker $USER
+
+# Appliquer le changement (ou redémarre ta session)
+newgrp docker
+
+# Vérifier la version
+docker --version
+
+# Nouvelle syntaxe (plugin intégré)
+docker compose version
+
+# Au lieu de docker-compose up
+docker compose up
+
+# Au lieu de docker-compose down  
+docker compose down
+
+# Test avec le conteneur hello-world
+docker run hello-world
+----------------------------------------- Installation Terminé -------------------------------------------------------------
+
+
+Comprendre Docker et Docker Compose: Les bases
+
+# Regardons ce qui s'est passé
+docker images
+docker ps -a
+
+# Lancer un serveur web
+docker run -d -p 8080:80 --name mon-nginx nginx:latest
+
+# Voir les conteneurs en cours
+docker ps
+
+# Tester le serveur web
+curl http://localhost:8080
+# Ou ouvre ton navigateur sur http://ton-ip-vm:8080
+
+# Regarder les logs du conteneur
+docker logs mon-nginx
+
+# Voir les détails du conteneur
+docker inspect mon-nginx
+
+# Exécuter une commande dans le conteneur
+docker exec -it mon-nginx bash
+
+# Tu es maintenant DANS le conteneur
+ls /usr/share/nginx/html/  # Les fichiers web
+ps aux                     # Les processus qui tournent
+exit                       # Pour sortir
+
+# Créer un fichier HTML sur ton système
+echo "<h1>Salut ! Mon premier conteneur Docker</h1>" > index.html
+
+# Copier ce fichier dans le conteneur
+docker cp index.html mon-nginx:/usr/share/nginx/html/
+
+# Vérifier le changement
+curl http://localhost:8080
+
+# Mode interactif (premier plan)
+docker run -it --name test-ubuntu ubuntu:22.04 bash
+
+# Tu es maintenant dans un conteneur Ubuntu !
+# Fais quelques commandes :
+ls /
+whoami
+apt update && apt install -y curl
+exit
+
+# Le conteneur s'arrête quand tu sors
+
+# Lister tous les conteneurs (actifs et arrêtés)
+docker ps -a
+
+# Redémarrer un conteneur arrêté
+docker start test-ubuntu
+
+# Arrêter un conteneur
+docker stop mon-nginx
+
+# Supprimer un conteneur (il doit être arrêté)
+docker rm test-ubuntu
+
+# Forcer la suppression (même en cours)
+docker rm -f mon-nginx
+----------------------------------------------- Fin ----------------------------------------------------------------------
+
+Exercice Pratique
+
+# Créer un dossier pour notre projet
+mkdir mon-premier-dockerfile
+cd mon-premier-dockerfile
+
+# Vérifier qu'on est dans le bon dossier
+pwd
+
+# Créer les fichiers (utilise les artifacts ci-dessus)
+# Dockerfile et welcome.sh dans le même dossier
+
+# Créer le fichier welcome.sh
+nano welcome.sh
+# (ou vim welcome.sh si tu préfères)
+
+# Créer le Dockerfile (sans extension !)
+nano Dockerfile
+
+# Vérifier qu'on a bien nos deux fichiers
+ls -la
+
+# Tu devrais voir :
+# Dockerfile
+# welcome.sh
+
+# Construire ton image
+docker build -t mon-image:v1 .
+
+# Voir ta nouvelle image
+docker images
+
+# Lancer ton conteneur personnalisé
+docker run -d --name mon-conteneur mon-image:v1
+
+# Te connecter à ton conteneur
+docker exec -it mon-conteneur bash
+
+# Tu es maintenant dans TON conteneur personnalisé !
+# Tu peux voir ton script de bienvenue qui tourne
+------------------------------------------------------ Pratique --------------------------------------------------
+Test pratique:
+
+# 1. Créer le dossier et aller dedans
+mkdir mon-test-dockerfile && cd mon-test-dockerfile
+
+# 2. Créer un Dockerfile simple
+echo 'FROM ubuntu:22.04
+RUN echo "Hello depuis MON image !" > /hello.txt
+CMD cat /hello.txt' > Dockerfile
+
+# 3. Construire l'image
+docker build -t test-simple .
+
+# 4. Lancer un conteneur
+docker run test-simple
+----------------------------------------------------- Fin ---------------------------------------------------------
+
+# Créer un conteneur et y ajouter des données
+docker run -it --name test-data ubuntu:22.04 bash
+# Dans le conteneur :
+echo "Mes données importantes" > /data.txt
+exit
+
+# Supprimer le conteneur
+docker rm test-data
+
+# 💥 Tes données sont perdues !
+
+# ========================================
+# GUIDE PRATIQUE : VOLUMES DOCKER
+# ========================================
+
+# 1. VOLUMES DOCKER (Recommandé)
+# ==============================
+
+# Créer un volume nommé
+docker volume create mon-volume
+
+# Utiliser le volume
+docker run -it --name app1 -v mon-volume:/app/data ubuntu:22.04 bash
+# Dans le conteneur : echo "test" > /app/data/fichier.txt
+
+# Le volume persiste même après suppression du conteneur !
+docker rm -f app1
+
+# Créer un nouveau conteneur avec le même volume
+docker run -it --name app2 -v mon-volume:/app/data ubuntu:22.04 bash
+# Dans le conteneur : cat /app/data/fichier.txt → "test" est toujours là !
+
+# Lister les volumes
+docker volume ls
+
+# Voir les détails d'un volume
+docker volume inspect mon-volume
+
+# 2. BIND MOUNTS (Dossiers de l'hôte)
+# ==================================
+
+# Créer un dossier sur ton système
+mkdir /home/$USER/mes-donnees
+echo "Fichier depuis l'hôte" > /home/$USER/mes-donnees/host-file.txt
+
+# Monter ce dossier dans le conteneur
+docker run -it --name bind-test -v /home/$USER/mes-donnees:/app/data ubuntu:22.04 bash
+# Dans le conteneur : ls /app/data → tu vois host-file.txt
+# Créer un fichier : echo "Depuis le conteneur" > /app/data/container-file.txt
+
+# Sur ton hôte, vérifier :
+ls /home/$USER/mes-donnees → tu vois container-file.txt !
+
+# 3. VOLUMES TEMPORAIRES (tmpfs)
+# ==============================
+
+# Stockage en RAM (perdu à l'arrêt)
+docker run -it --name temp-storage --tmpfs /tmp-data ubuntu:22.04 bash
+# Dans le conteneur : echo "En mémoire seulement" > /tmp-data/temp.txt
+
+# 4. COMPARAISON DES MÉTHODES
+# ===========================
+
+echo "
+VOLUMES DOCKER vs BIND MOUNTS vs TMPFS
+
+┌─────────────────┬─────────────┬─────────────┬─────────────┐
+│                 │ Volume      │ Bind Mount  │ tmpfs       │
+├─────────────────┼─────────────┼─────────────┼─────────────┤
+│ Gestion         │ Docker      │ OS Hôte     │ Mémoire     │
+│ Performance     │ Optimale    │ Dépend OS   │ Très rapide │
+│ Partage         │ Facile      │ Facile      │ Non         │
+│ Persistance     │ Oui         │ Oui         │ Non         │
+│ Portabilité     │ Excellente  │ Limitée     │ Excellente  │
+│ Sécurité        │ Isolé       │ Accès host  │ Isolé       │
+└─────────────────┴─────────────┴─────────────┴─────────────┘
+"
+
+# Lister les réseaux par défaut
+docker network ls
+
+# Créer un réseau personnalisé
+docker network create mon-reseau
+
+# Créer deux conteneurs sur le même réseau
+docker run -d --name web --network mon-reseau nginx:latest
+docker run -it --name client --network mon-reseau ubuntu:22.04 bash
+
+# Dans le conteneur client :
+apt update && apt install -y curl
+curl http://web  # ✅ Fonctionne ! Communication par nom
+
+--------------------------------------------- Fin -----------------------------------------------------------------
+
+# Création d'une application complète avec base de données
+
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  database:
+    image: postgres:15
+    container_name: ma-db
+    environment:
+      POSTGRES_DB: monapp
+      POSTGRES_USER: admin  
+      POSTGRES_PASSWORD: secret123
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d monapp"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Application web (Node.js)
+  webapp:
+    build: 
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: mon-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_USER=admin
+      - DB_PASS=secret123
+      - DB_NAME=monapp
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules  # Volume anonyme pour node_modules
+    networks:
+      - app_network
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Reverse proxy Nginx
+  proxy:
+    image: nginx:alpine
+    container_name: mon-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - app_network
+    depends_on:
+      - webapp
+    restart: unless-stopped
+
+  # Redis pour le cache
+  cache:
+    image: redis:7-alpine
+    container_name: mon-cache
+    command: redis-server --appendonly yes
+    volumes:
+      - cache_data:/data
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Outil de monitoring (optionnel)
+  adminer:
+    image: adminer:latest
+    container_name: db-admin
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+    depends_on:
+      - database
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  db_data:
+    driver: local
+  cache_data:
+    driver: local
+
+# Créer la structure
+mkdir lamp-docker && cd lamp-docker
+mkdir www mysql-init
+
+# Créer le docker-compose.yml (utilise l'artifact ci-dessus)
+
+# Créer une page PHP de test
+echo '<?php
+echo "<h1>🐳 Ma Stack LAMP Docker</h1>";
+echo "<p>PHP Version: " . phpversion() . "</p>";
+
+// Test connexion MySQL
+try {
+    $pdo = new PDO("mysql:host=database;dbname=lamp_db", "lamp_user", "lamp_pass");
+    echo "<p style=\"color: green;\">✅ Connexion MySQL OK</p>";
+    
+    // Créer une table de test
+    $pdo->exec("CREATE TABLE IF NOT EXISTS test (id INT AUTO_INCREMENT PRIMARY KEY, message TEXT)");
+    $pdo->exec("INSERT INTO test (message) VALUES (\"Hello from Docker!\")");
+    
+    $result = $pdo->query("SELECT * FROM test");
+    echo "<h3>Données test :</h3><ul>";
+    foreach($result as $row) {
+        echo "<li>" . $row["message"] . "</li>";
+    }
+    echo "</ul>";
+    
+} catch(PDOException $e) {
+    echo "<p style=\"color: red;\">❌ Erreur MySQL: " . $e->getMessage() . "</p>";
+}
+
+echo "<hr><a href=\"http://localhost:8080\" target=\"_blank\">📊 Accéder à phpMyAdmin</a>";
+?>' > www/index.php
+
+# Lancer la stack
+docker compose up -d
+
+# Vérifier que tout tourne
+docker compose ps
+
+----------------------------------------- Fin --------------------------------------------------------------------
+
+
+# Surveillance et monitoring
+
+# Voir les ressources utilisées par tes conteneurs
+docker stats
+
+# Logs en temps réel d'un service spécifique
+docker compose logs -f web
+
+# Inspecter un conteneur en détail
+docker inspect lamp_web
+
+# Voir les processus dans un conteneur
+docker top lamp_web
+
+================= DEBUGGING COURANT =======================
+# Entrer dans un conteneur pour investiguer
+docker exec -it lamp_web bash
+
+# Si le conteneur crash, voir les logs
+docker compose logs database
+
+# Tester la connectivité réseau
+docker exec -it lamp_web ping database
+
+================ Variables d'environnement ================
+# ========================================
+# GESTION DES VARIABLES D'ENVIRONNEMENT
+# ========================================
+
+# 1. Créer un fichier .env (ne jamais commiter en prod !)
+cat > .env << 'EOF'
+# Configuration de la base de données
+DB_NAME=lamp_db
+DB_USER=lamp_user
+DB_PASS=lamp_secret_password
+DB_ROOT_PASS=super_secret_root
+
+# Configuration de l'application
+APP_ENV=development
+APP_PORT=3000
+APP_SECRET=mon-secret-key-tres-long
+
+# Configuration Redis
+REDIS_PORT=6379
+EOF
+
+# 2. Modifier docker-compose.yml pour utiliser les variables
+cat > docker-compose.yml << 'EOF'
+services:
+  database:
+    image: mysql:8.0
+    container_name: lamp_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - lamp_network
+    restart: unless-stopped
+
+  web:
+    image: php:8.2-apache
+    container_name: lamp_web
+    ports:
+      - "${APP_PORT:-3000}:80"
+    environment:
+      - APP_ENV=${APP_ENV}
+      - DB_HOST=database
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+    volumes:
+      - ./www:/var/www/html
+    networks:
+      - lamp_network
+    depends_on:
+      - database
+    restart: unless-stopped
+
+  cache:
+    image: redis:7-alpine
+    container_name: lamp_cache
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - lamp_network
+    restart: unless-stopped
+
+networks:
+  lamp_network:
+    driver: bridge
+
+volumes:
+  db_data:
+EOF
+
+# 3. Test avec les variables
+docker compose config  # Voir la config finale avec les variables remplacées
+docker compose up -d
+
+------------------------------------ Multi-environnement Configs --------------------------------------------------
+
+# =========================================
+# STRUCTURE MULTI-ENVIRONNEMENTS
+# =========================================
+
+# docker-compose.yml (base commune)
+services:
+  app:
+    build: .
+    networks:
+      - app_network
+    
+  database:
+    image: postgres:15
+    networks:
+      - app_network
+
+networks:
+  app_network:
+
+# docker-compose.override.yml (développement par défaut)
+# Se charge automatiquement avec docker-compose.yml
+services:
+  app:
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app          # Code en live reload
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+    command: npm run dev
+    
+  database:
+    ports:
+      - "5432:5432"     # Accès direct à la DB en dev
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_PASSWORD: devpass
+    volumes:
+      - ./dev-data:/var/lib/postgresql/data
+
+# docker-compose.prod.yml (production)
+services:
+  app:
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+      - DEBUG=false
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    
+  database:
+    environment:
+      POSTGRES_DB: proddb
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - prod_db_data:/var/lib/postgresql/data
+    secrets:
+      - db_password
+    restart: unless-stopped
+
+# docker-compose.test.yml (tests)
+services:
+  app:
+    environment:
+      - NODE_ENV=test
+      - DB_NAME=testdb
+    command: npm test
+    
+  database:
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_PASSWORD: testpass
+    tmpfs:
+      - /var/lib/postgresql/data  # DB en mémoire pour les tests
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  prod_db_data:
+
+# =========================================
+# COMMANDES POUR CHAQUE ENVIRONNEMENT
+# =========================================
+
+# Développement (par défaut)
+# docker compose up -d
+
+# Production
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Tests
+# docker compose -f docker-compose.yml -f docker-compose.test.yml up --abort-on-container-exit
+
+--------------------------------------- Debugging d'erreur --------------------------------------------------------
+# 1. Nettoyer ce qui ne marche pas
+docker compose down -v
+
+# 2. Supprimer le mauvais fichier
+rm docker-compose.yml
+
+# 3. Créer la bonne configuration LAMP
+cat > docker-compose.yml << 'EOF'
+services:
+  web:
+    image: php:8.2-apache
+    container_name: lamp_web
+    ports:
+      - "80:80"
+    volumes:
+      - ./www:/var/www/html
+    networks:
+      - lamp_network
+    depends_on:
+      - database
+    restart: unless-stopped
+
+  database:
+    image: mysql:8.0
+    container_name: lamp_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lamp_db
+      MYSQL_USER: lamp_user
+      MYSQL_PASSWORD: lamp_pass
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - lamp_network
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: lamp_pma
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: database
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    networks:
+      - lamp_network
+    depends_on:
+      - database
+    restart: unless-stopped
+
+networks:
+  lamp_network:
+    driver: bridge
+
+volumes:
+  db_data:
+EOF
+
+# 4. Vérifier que le dossier www existe et a le fichier PHP
+ls -la www/
+
+# S'il n'existe pas, créer le fichier de test :
+echo '<?php
+phpinfo();
+?>' > www/index.php
+
+# 5. Tester la configuration avant de lancer
+docker compose config
+
+# 6. Lancer la stack
+docker compose up -d
+
+# 7. Vérifier
+docker compose ps
