@@ -1,0 +1,173 @@
+---------------------------------------------------------- Docker Engine ----------------------------------------------------------------------
+# 1. Installation
+mkdir passbolt-docker && cd passbolt-docker
+# Créer le docker-compose.yml avec la première configuration
+
+# =================================================
+# PASSBOLT - DÉPLOIEMENT AVEC DOCKER ENGINE
+# =================================================
+
+services:
+  # Base de données MariaDB
+  database:
+    image: mariadb:10.11
+    container_name: passbolt_db
+    environment:
+      MARIADB_ROOT_PASSWORD: root_password_super_secret
+      MARIADB_DATABASE: passbolt
+      MARIADB_USER: passbolt
+      MARIADB_PASSWORD: passbolt_password_secret
+    volumes:
+      - passbolt_db_data:/var/lib/mysql
+    networks:
+      - passbolt_network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Application Passbolt
+  passbolt:
+    image: passbolt/passbolt:latest-ce
+    container_name: passbolt_app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Configuration de l'application
+      APP_FULL_BASE_URL: https://passbolt.local
+      
+      # Configuration de la base de données
+      DATASOURCES_DEFAULT_HOST: database
+      DATASOURCES_DEFAULT_USERNAME: passbolt
+      DATASOURCES_DEFAULT_PASSWORD: passbolt_password_secret
+      DATASOURCES_DEFAULT_DATABASE: passbolt
+      
+      # Configuration email (optionnel pour le test)
+      EMAIL_DEFAULT_FROM: admin@passbolt.local
+      EMAIL_TRANSPORT_DEFAULT_HOST: localhost
+      EMAIL_TRANSPORT_DEFAULT_PORT: 25
+      
+      # Clé GPG (générée automatiquement au premier démarrage)
+      PASSBOLT_KEY_NAME: Passbolt Server
+      PASSBOLT_KEY_EMAIL: admin@passbolt.local
+      
+    volumes:
+      - passbolt_gpg:/etc/passbolt/gpg
+      - passbolt_jwt:/etc/passbolt/jwt
+      - passbolt_images:/usr/share/php/passbolt/webroot/img/public/images
+    networks:
+      - passbolt_network
+    depends_on:
+      - database
+    restart: unless-stopped
+    command: ["/usr/bin/wait-for.sh", "-t", "0", "database:3306", "--", "/docker-entrypoint.sh"]
+
+networks:
+  passbolt_network:
+    driver: bridge
+
+volumes:
+  passbolt_db_data:
+  passbolt_gpg:
+  passbolt_jwt:
+  passbolt_images:
+
+# 2. Déploiement
+docker compose up -d
+
+# 3. Vérification
+docker compose ps
+docker compose logs passbolt
+
+# 4. Création admin
+docker exec -it passbolt_app su -m -c "bin/cake passbolt register_user -u admin@passbolt.local -f Admin -l User -r admin" -s /bin/sh www-data
+
+# 5. Accès : https://passbolt.local
+-------------------------------------------------------------- Portainer ------------------------------------------------------------------------
+
+# 1. Installer Portainer d'abord
+docker volume create portainer_data
+docker run -d --name portainer --restart unless-stopped -p 9443:9443 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
+
+# 2. Accéder à Portainer : https://localhost:9443
+# 3. Créer un compte admin
+# 4. Aller dans "Stacks" > "Add Stack"
+# 5. Coller la configuration Passbolt pour 
+
+# =================================================
+# PASSBOLT STACK POUR PORTAINER
+# =================================================
+# À copier-coller dans Portainer > Stacks > Add stack
+
+services:
+  # Base de données
+  passbolt_db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: ChangeMe_RootPassword123!
+      MARIADB_DATABASE: passbolt
+      MARIADB_USER: passbolt
+      MARIADB_PASSWORD: ChangeMe_PassboltPassword123!
+    volumes:
+      - passbolt_db_data:/var/lib/mysql
+    networks:
+      - passbolt_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 1m
+      start_interval: 10s
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  # Application Passbolt
+  passbolt_app:
+    image: passbolt/passbolt:4.7.0-1-ce
+    ports:
+      - "8081:80"
+      - "8443:443"
+    environment:
+      # URL de ton instance (change selon ton setup)
+      APP_FULL_BASE_URL: https://localhost:8443
+      
+      # Configuration base de données
+      DATASOURCES_DEFAULT_HOST: passbolt_db
+      DATASOURCES_DEFAULT_USERNAME: passbolt
+      DATASOURCES_DEFAULT_PASSWORD: ChangeMe_PassboltPassword123!
+      DATASOURCES_DEFAULT_DATABASE: passbolt
+      
+      # Configuration email (pour les invitations)
+      EMAIL_DEFAULT_FROM: admin@localhost
+      EMAIL_TRANSPORT_DEFAULT_HOST: localhost
+      EMAIL_TRANSPORT_DEFAULT_PORT: 25
+      
+      # Configuration GPG
+      PASSBOLT_KEY_NAME: Passbolt Server Key
+      PASSBOLT_KEY_EMAIL: admin@localhost
+      
+    volumes:
+      - passbolt_gpg_data:/etc/passbolt/gpg
+      - passbolt_jwt_data:/etc/passbolt/jwt
+      - passbolt_images:/usr/share/php/passbolt/webroot/img/public/images
+    networks:
+      - passbolt_net
+    depends_on:
+      passbolt_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  passbolt_net:
+    driver: bridge
+
+volumes:
+  passbolt_db_data:
+    driver: local
+  passbolt_gpg_data:
+    driver: local
+  passbolt_jwt_data:
+    driver: local
+  passbolt_images:
+    driver: local
+    
+# 6. Cliquer "Deploy the stack"

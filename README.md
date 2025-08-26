@@ -1,4 +1,4 @@
-# *I.	Déploiement de PassBolt*
+# I.	Déploiement de PassBolt
 
 Dans le cadre de notre étude, et pour déployer PassBolt sur un Debian, quelques éléments prérequis sont nécessaires :
 -	Un serveur Debian 12 minimal.
@@ -13,14 +13,14 @@ Avant toute installation ou déploiement de solution logicielle, il est essentie
 
 Télécharger ufw pour configurer les port SSH (22) pour l’administration à distance, HTTP (80) et HTTPS (443) pour l’accès web. En cas d’absence de SSH sur votre serveur, la première ligne installe les packages ufw et openSSH (facultative) pour un accès à distance.
 
-b.	Installation d’un certificat SSL auto-signée 
+## b.	Installation d’un certificat SSL auto-signée 
 
 Puis Accorder les droits d’exécution et d’écriture pour l’utilisateur aux fichiers :
 
-c.	Installation de NGINX et MariaDB
+## c.	Installation de NGINX et MariaDB
 Si votre serveur n’a pas de serveur web installer le package Debian de Passbolt installera un serveur web nginx et une base de données mariadb qui sera configurer pour Passbolt. Si vous préférer installer vous-même votre serveur nginx et mariadb vous pouvez le faire en utilisant les commandes suivantes :
 
-d.	Configuration du référentiel de package
+## d.	Configuration du référentiel de package
 Avant de télécharger Passbolt CE et de l'installer, Passbolt fournit un référentiel de packages que qu’il est important de configurer pour faciliter les tâches d'installation et de mise à jour.
 
 Ces lignes permettent de : 
@@ -35,7 +35,7 @@ Après avoir installé toutes les dépendances et côcher tous les prérequis n�
 C’est la confirmation que le script a bien été exécuter et Passbolt est près à être installé sur le système. Si des messages d’erreur apparait à ce niveau. Il suffit de suivre les recommandations dictées sur les logs d’erreurs pour corriger le problème.
 A présent il faut lancer la commande ci-dessous pour configurer Mariadb et Nginx afin d’achever la configuration du Passbolt en ligne de commande. La prochaine étape se fera sur l’interface web de Passbolt.
 
-e.	Configuration de Mariadb
+## e.	Configuration de Mariadb
 Lors de l’execution du script d’installation de Passbolt, le paquet Debian passbolt installera le serveur mariadb localement. Cette étape permettra de créer une base de données mariadb vide pour passbolt. 
 Figure 1: Image de configuration de Mariadb
 
@@ -43,7 +43,7 @@ Le processus de configuration demandera les identifiants de l'administrateur mar
 Nous devons maintenant créer un utilisateur mariadb avec des autorisations réduites pour que Passbolt puisse se connecter. Ces valeurs seront également demandées ultérieurement par l'outil de configuration Web de Passbolt ; Il est donc nécessaire de les garder à l'esprit.
 Enfin, nous devons créer une base de données que passbolt pourra utiliser, pour cela nous devons la nommer.
 	
-f.	Configurer nginx pour servir HTTPS
+## f.	Configurer nginx pour servir HTTPS
 Selon les besoins, il existe deux options différentes pour configurer nginx et SSL à l'aide du package Debian et un troisième si vous ne souhaitez pas configurer aussitôt le certificat :
 -	Auto (Avec Let’s Encrypt)
 -	Manuel (Utilisation de certificats SSL fournie par l’utilisateur)
@@ -52,10 +52,10 @@ Selon les besoins, il existe deux options différentes pour configurer nginx et 
 Figure 2: Image de configuration de Nginx
 Voilà c’est fait. On peut à présent nous connecter sur l’interface graphique à travers l’adresse IP ou les FQDN pour pouvoir configurer l’outils et les paramètres de base.
   
-3.	Configuration de Passbolt
+## 3.	Configuration de Passbolt
 Avant d'utiliser l'application, il faut la configurer. Accédons à l'adresse IP ou au nom d'hôte de passbolt. On accédera alors à la page de démarrage.
  
-a.	Healthcheck : Le bilan de santé
+## a.	Healthcheck : Le bilan de santé
 La première page de l'assistant vous indiquera si votre environnement est prêt pour Passbolt. Résolvez les problèmes éventuels et cliquez sur « Démarrer la configuration » lorsque vous êtes prêt. 
 Figure 4: Image Assistant de configuration de Passbolt web
 b.	La Base de données
@@ -73,14 +73,14 @@ Pour créer une nouvelle clé GnuPG sans mot de passe, possible en exécutant le
 Il ne faut pas hésiter à remplacer Name-Real: et Name-Email: par les vôtres.
 Pour afficher la nouvelle clé :
 
-d.	Serveur de messagerie (SMTP)
+## d.	Serveur de messagerie (SMTP)
 À ce stade, l'assistant vous demandera de saisir les détails de votre serveur SMTP.
  
-Figure 7: Image Assistant - Serveur SMTP
+## Figure 7: Image Assistant - Serveur SMTP
 
 On peut également vérifier que la configuration est correcte en utilisant la fonction d'e-mail de test à droite de votre écran. Saisir l'adresse e-mail à laquelle on souhaite que l'assistant nous envoie un e-mail de test, puis cliquer sur « Envoyer un e-mail de test ».
 
-e.	Les préférences 
+## e.	Les préférences 
 L'assistant demandera ensuite quelles préférences souhaitées pour l’instance de Passbolt. Les valeurs par défaut recommandées sont pré-renseignées, mais on peut toujours les modifier.
 Les prochaines étapes sont : 
 -	La Première création d’utilisateur
