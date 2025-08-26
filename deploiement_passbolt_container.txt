@@ -137,13 +137,13 @@ services:
       DATASOURCES_DEFAULT_DATABASE: passbolt
       
       # Configuration email (pour les invitations)
-      EMAIL_DEFAULT_FROM: admin@localhost
+      EMAIL_DEFAULT_FROM: ismael.mouloungui@groupebatimat.com
       EMAIL_TRANSPORT_DEFAULT_HOST: localhost
       EMAIL_TRANSPORT_DEFAULT_PORT: 25
       
       # Configuration GPG
-      PASSBOLT_KEY_NAME: Passbolt Server Key
-      PASSBOLT_KEY_EMAIL: admin@localhost
+      PASSBOLT_KEY_NAME: epxa dngg suza ktyr
+      PASSBOLT_KEY_EMAIL: ismael.mouloungui@groupebatimat.com
       
     volumes:
       - passbolt_gpg_data:/etc/passbolt/gpg
@@ -169,5 +169,80 @@ volumes:
     driver: local
   passbolt_images:
     driver: local
-    
+
 # 6. Cliquer "Deploy the stack"
+-------------------------------------------------- Gestion des mis à jours -------------------------------------------------------------------------
+
+# =================================================
+# PASSBOLT AVEC GMAIL SMTP - DOCKER ENGINE
+# =================================================
+
+services:
+  database:
+    image: mariadb:10.11
+    container_name: passbolt_db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password_super_secret}
+      MARIADB_DATABASE: ${DB_NAME:-passbolt}
+      MARIADB_USER: ${DB_USER:-passbolt}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-passbolt_password_secret}
+    volumes:
+      - passbolt_db_data:/var/lib/mysql
+    networks:
+      - passbolt_network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  passbolt:
+    image: passbolt/passbolt:4.7.0-1-ce
+    container_name: passbolt_app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Configuration de base
+      APP_FULL_BASE_URL: ${APP_URL:-https://localhost}
+      
+      # Configuration base de données
+      DATASOURCES_DEFAULT_HOST: database
+      DATASOURCES_DEFAULT_USERNAME: ${DB_USER:-passbolt}
+      DATASOURCES_DEFAULT_PASSWORD: ${DB_PASSWORD:-passbolt_password_secret}
+      DATASOURCES_DEFAULT_DATABASE: ${DB_NAME:-passbolt}
+      
+      # 🎯 CONFIGURATION GMAIL SMTP
+      EMAIL_TRANSPORT_DEFAULT_CLASS_NAME: Smtp
+      EMAIL_DEFAULT_FROM_NAME: ${EMAIL_FROM_NAME:-Passbolt Admin}
+      EMAIL_DEFAULT_FROM: ${EMAIL_FROM:-ton-email@gmail.com}
+      EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
+      EMAIL_TRANSPORT_DEFAULT_PORT: 587
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: ${GMAIL_USERNAME:-ton-email@gmail.com}
+      EMAIL_TRANSPORT_DEFAULT_PASSWORD: ${GMAIL_APP_PASSWORD:-ton-mot-de-passe-app}
+      EMAIL_TRANSPORT_DEFAULT_TLS: true
+      EMAIL_TRANSPORT_DEFAULT_TIMEOUT: 30
+      
+      # Configuration GPG
+      PASSBOLT_KEY_NAME: ${GPG_KEY_NAME:-Passbolt Server}
+      PASSBOLT_KEY_EMAIL: ${EMAIL_FROM:-ton-email@gmail.com}
+      
+      # Sécurité
+      PASSBOLT_REGISTRATION_PUBLIC: false
+      
+    volumes:
+      - passbolt_gpg:/etc/passbolt/gpg
+      - passbolt_jwt:/etc/passbolt/jwt
+      - passbolt_images:/usr/share/php/passbolt/webroot/img/public/images
+    networks:
+      - passbolt_network
+    depends_on:
+      - database
+    restart: unless-stopped
+
+networks:
+  passbolt_network:
+    driver: bridge
+
+volumes:
+  passbolt_db_data:
+  passbolt_gpg:
+  passbolt_jwt:
+  passbolt_images:
