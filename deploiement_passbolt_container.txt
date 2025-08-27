@@ -473,3 +473,32 @@ volumes:
   passbolt_images:
     driver: local
 ---------------------------------------------------------- Fin -------------------------------------------------------------------------------------
+
+# 1. Créer le projet
+mkdir passbolt-prod && cd passbolt-prod
+
+# 2. Créer le fichier .env
+cat > .env << 'EOF'
+# Remplace ces valeurs !
+APP_URL=https://localhost
+DB_ROOT_PASSWORD=ChangeMoi_RootPassword123!
+DB_PASSWORD=ChangeMoi_PassboltPassword123!
+EMAIL_FROM=ton-email@gmail.com
+GMAIL_USERNAME=ton-email@gmail.com
+GMAIL_APP_PASSWORD=ton-mot-de-passe-app-16-chars
+EMAIL_FROM_NAME=Mon Équipe Passbolt
+EOF
+
+# 3. Créer le docker-compose.yml (utilise l'artifact gmail config)
+
+# 4. Tester la configuration
+docker compose config
+
+# 5. Déployer
+docker compose up -d
+
+# 6. Suivre les logs
+docker compose logs -f
+
+# 7. Créer le premier admin (attendre 1-2 minutes)
+docker exec -it passbolt_app su -m -c "bin/cake passbolt register_user -u admin@gmail.com -f Admin -l User -r admin" -s /bin/sh www-data
