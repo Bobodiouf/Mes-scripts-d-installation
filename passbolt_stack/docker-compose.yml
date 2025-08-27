@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+    passbolt_app:
+        image: passbolt/passbolt:latest
+        container_name: passbolt_app
+        restart: unless-stopped
+        environment:
+            # Configuration de la base de données
+            DATASOURCES_DEFAULT_HOST: passbolt_db
+            DATASOURCES_DEFAULT_USERNAME: passbolt
+            DATASOURCES_DEFAULT_PASSWORD: Passer
+            DATASOURCES_DEFAULT_DATABASE: passbolt
+            
+            # Configuration SMTP Gmail
+            EMAIL_TRANSPORT_DEFAULT_CLASS: Smtp
+            EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
+            EMAIL_TRANSPORT_DEFAULT_PORT: 587
+            EMAIL_TRANSPORT_DEFAULT_USERNAME: ismael.mouloungui@groupebatimat.com
+            EMAIL_TRANSPORT_DEFAULT_PASSWORD: hmob ypbv ooou heee
+            EMAIL_TRANSPORT_DEFAULT_TLS: true
+            EMAIL_DEFAULT_FROM: Passbolt <ismael.mouloungui@groupebatimat.com>
+            EMAIL_DEFAULT_FROM_NAME: Passbolt
+            
+            # Configuration de l'application
+            APP_FULL_BASE_URL: https://passbolt.local
+
+            # Configuration SSL (auto-signé)
+            PASSBOLT_SSL_FORCE: true
+            PASSBOLT_SSL_SETUP: true
+            
+            # Configuration NTP
+            NTP_SERVER: pool.ntp.org
+            
+        volumes:
+            - gpg_data:/etc/passbolt/gpg
+            - jwt_data:/etc/passbolt/jwt
+            - ssl_data:/etc/ssl/certs/passbolt
+            - ./config/passbolt.php:/etc/passbolt/passbolt.php
+        networks:
+            - passbolt_network
+        depends_on:
+            - passbolt_db
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+    passbolt_db:
+        image: mariadb:10.11
+        container_name: passbolt_db
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: Passer
+            MYSQL_DATABASE: passbolt
+            MYSQL_USER: passbolt
+            MYSQL_PASSWORD: Passer
+        volumes:
+            - db_data:/var/lib/mysql
+        networks:
+            - passbolt_network
+        command: 
+            - --default-time-zone=+00:00
+            - --log-bin-trust-function-creators=1
+
+    nginx:
+        image: nginx:alpine
+        container_name: passbolt_nginx
+        restart: unless-stopped
+        ports:
+            - "443:443"
+            - "80:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
+            - ssl_data:/etc/ssl/certs/passbolt:ro
+            - ./html:/usr/share/nginx/html:ro
+        networks:
+            - passbolt_network
+        depends_on:
+            - passbolt_app
+
+volumes:
+    gpg_data:
+    jwt_data:
+    db_data:
+    ssl_data:
+
+networks:
+    passbolt_network:
+        driver: bridge
