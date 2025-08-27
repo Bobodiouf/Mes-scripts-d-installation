@@ -501,4 +501,345 @@ docker compose up -d
 docker compose logs -f
 
 # 7. Créer le premier admin (attendre 1-2 minutes)
-docker exec -it passbolt_app su -m -c "bin/cake passbolt register_user -u admin@gmail.com -f Admin -l User -r admin" -s /bin/sh www-data
+------------------------------------------------------- Fin ----------------------------------------------------------------------------------------
+
+# =================================================
+# GESTION AVANCÉE DES STACKS DOCKER
+# =================================================
+
+# 1. ORGANISATION DE TES PROJETS
+# ==============================
+
+# Structure recommandée :
+# ~/docker-projects/
+# ├── passbolt/
+# │   ├── docker-compose.yml
+# │   └── .env
+# ├── lamp/
+# │   ├── docker-compose.yml
+# │   └── www/
+# └── monitoring/
+#     ├── docker-compose.yml
+#     └── config/
+
+# 2. SCRIPT DE GESTION GLOBAL
+# ===========================
+
+#!/bin/bash
+# docker-manager.sh - Gérer toutes tes stacks
+
+PROJECTS_DIR=~/docker-projects
+
+# Fonction pour lister tous les projets
+list_all_stacks() {
+    echo "🐳 === TOUTES MES STACKS === 🐳"
+    echo ""
+    
+    for project_dir in $PROJECTS_DIR/*/; do
+        if [[ -f "$project_dir/docker-compose.yml" ]]; then
+            project_name=$(basename "$project_dir")
+            echo "📁 Projet: $project_name"
+            echo "   📍 Chemin: $project_dir"
+            
+            cd "$project_dir"
+            if docker compose ps -q &>/dev/null; then
+                echo "   🟢 Status: $(docker compose ps --services | wc -l) services"
+                docker compose ps --format "table {{.Name}}\t{{.Status}}"
+            else
+                echo "   🔴 Status: Arrêté"
+            fi
+            echo ""
+        fi
+    done
+}
+
+# Fonction pour démarrer une stack
+start_stack() {
+    local stack_name=$1
+    local project_dir="$PROJECTS_DIR/$stack_name"
+    
+    if [[ -f "$project_dir/docker-compose.yml" ]]; then
+        echo "🚀 Démarrage de $stack_name..."
+        cd "$project_dir"
+        docker compose up -d
+        echo "✅ $stack_name démarré"
+    else
+        echo "❌ Stack '$stack_name' introuvable"
+    fi
+}
+
+# Fonction pour arrêter une stack
+stop_stack() {
+    local stack_name=$1
+    local project_dir="$PROJECTS_DIR/$stack_name"
+    
+    if [[ -f "$project_dir/docker-compose.yml" ]]; then
+        echo "⏹️ Arrêt de $stack_name..."
+        cd "$project_dir"
+        docker compose down
+        echo "✅ $stack_name arrêté"
+    else
+        echo "❌ Stack '$stack_name' introuvable"
+    fi
+}
+
+# Fonction pour voir les logs d'une stack
+logs_stack() {
+    local stack_name=$1
+    local project_dir="$PROJECTS_DIR/$stack_name"
+    
+    if [[ -f "$project_dir/docker-compose.yml" ]]; then
+        echo "📋 Logs de $stack_name..."
+        cd "$project_dir"
+        docker compose logs -f
+    else
+        echo "❌ Stack '$stack_name' introuvable"
+    fi
+}
+
+# Fonction principale
+case "$1" in
+    "list"|"ls")
+        list_all_stacks
+        ;;
+    "start")
+        start_stack "$2"
+        ;;
+    "stop")
+        stop_stack "$2"
+        ;;
+    "logs")
+        logs_stack "$2"
+        ;;
+    "status")
+        docker compose ls
+        ;;
+    *)
+        echo "Usage: $0 {list|start|stop|logs|status} [stack_name]"
+        echo ""
+        echo "Exemples:"
+        echo "  $0 list                    # Lister toutes les stacks"
+        echo "  $0 start passbolt         # Démarrer la stack passbolt"
+        echo "  $0 stop lamp              # Arrêter la stack lamp"
+        echo "  $0 logs monitoring        # Voir les logs de monitoring"
+        echo "  $0 status                 # Status global"
+        ;;
+esac
+
+# 3. MONITORING EN TEMPS RÉEL
+# ===========================
+
+# Voir l'utilisation des ressources de toutes les stacks
+docker stats --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
+
+# Surveiller les logs de tous les projets
+docker compose ls -q | xargs -I {} docker compose -p {} logs -f --tail=10
+
+# 4. NETTOYAGE ET MAINTENANCE
+# ===========================
+
+# Nettoyer les conteneurs arrêtés de toutes les stacks
+docker compose ls -q | xargs -I {} docker compose -p {} rm -f
+
+# Supprimer les images inutilisées
+docker image prune -f
+
+# Supprimer les volumes orphelins
+docker volume prune -f
+
+# 5. SAUVEGARDE GLOBALE
+# =====================
+
+#!/bin/bash
+# backup-all-stacks.sh
+
+BACKUP_DIR=~/docker-backups/$(date +%Y%m%d)
+mkdir -p $BACKUP_DIR
+
+for project_dir in ~/docker-projects/*/; do
+    project_name=$(basename "$project_dir")
+    
+    echo "💾 Sauvegarde de $project_name..."
+    
+    # Sauvegarde des fichiers de config
+    cp -r "$project_dir" "$BACKUP_DIR/$project_name-config"
+    
+    # Sauvegarde des volumes
+    cd "$project_dir"
+    for volume in $(docker volume ls -q | grep "${project_name}"); do
+        docker run --rm -v "$volume:/data" -v "$BACKUP_DIR:/backup" ubuntu tar czf "/backup/$volume.tar.gz" -C /data .
+    done
+done
+
+echo "✅ Sauvegarde terminée dans $BACKUP_DIR"
+----------------------------------------------------- Fin ------------------------------------------------------------------------------------------
+
+# Docker Engine vs Portainer : Guide de Choix
+
+## 🎯 Recommandation par Profil
+
+### **Débutant/Intermédiaire → Portainer**
+- Interface visuelle pour comprendre les concepts
+- Feedback immédiat sur les actions
+- Moins d'erreurs de syntaxe
+- Courbe d'apprentissage plus douce
+
+### **Avancé/DevOps → Docker Engine**
+- Contrôle total et précision
+- Scriptable et automatisable
+- Performance optimale
+- Standards de l'industrie
+
+---
+
+## 📊 Comparaison Détaillée
+
+| Critère | Docker Engine | Portainer | Gagnant |
+|---------|---------------|-----------|---------|
+| **Sécurité** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Docker Engine |
+| **Performance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Docker Engine |
+| **Facilité d'usage** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Portainer |
+| **Contrôle** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Docker Engine |
+| **Monitoring** | ⭐⭐ | ⭐⭐⭐⭐⭐ | Portainer |
+| **Automatisation** | ⭐⭐⭐⭐⭐ | ⭐⭐ | Docker Engine |
+| **Apprentissage** | ⭐⭐ | ⭐⭐⭐⭐⭐ | Portainer |
+
+---
+
+## 🔐 Sécurité
+
+### Docker Engine
+```bash
+✅ Moins de surface d'attaque
+✅ Pas d'interface web exposée
+✅ Contrôle granulaire des permissions
+✅ Audit trails natifs
+❌ Plus complexe à sécuriser correctement
+```
+
+### Portainer
+```bash
+✅ Interface sécurisée avec RBAC
+✅ Authentification centralisée
+✅ SSL/TLS intégré
+❌ Interface web = surface d'attaque supplémentaire
+❌ Couche supplémentaire à maintenir
+```
+
+---
+
+## ⚡ Performance
+
+### Docker Engine
+```bash
+✅ Communication directe avec Docker daemon
+✅ Pas d'overhead d'interface
+✅ Optimisé pour la production
+✅ Ressources minimales utilisées
+```
+
+### Portainer
+```bash
+✅ Performance acceptable pour la plupart des cas
+❌ Overhead de l'interface web
+❌ Requêtes API supplémentaires
+❌ Consommation mémoire/CPU de Portainer
+```
+
+---
+
+## 🎨 Facilité d'Usage
+
+### Docker Engine
+```bash
+❌ Courbe d'apprentissage abrupte
+❌ Syntaxe à mémoriser
+❌ Pas de feedback visuel
+✅ Documentation excellente
+✅ Communauté énorme
+```
+
+### Portainer
+```bash
+✅ Interface intuitive
+✅ Drag & drop pour certaines actions
+✅ Visualisation des logs en temps réel
+✅ Templates prêts à l'emploi
+❌ Peut masquer la complexité sous-jacente
+```
+
+---
+
+## 🚀 Ma Recommandation Progressive
+
+### Phase 1 : Apprentissage (1-3 mois)
+**Utilise Portainer** pour :
+- Comprendre visuellement Docker
+- Éviter les erreurs de syntaxe
+- Voir l'impact de tes actions
+- Gagner en confiance
+
+### Phase 2 : Maîtrise (3-6 mois)  
+**Hybride : Portainer + Docker Engine**
+- Portainer pour le monitoring/debugging
+- Docker Engine pour les déploiements
+- Scripts Docker Engine pour l'automatisation
+
+### Phase 3 : Production (6+ mois)
+**Docker Engine principalement**
+- Scripts d'automatisation
+- CI/CD intégré
+- Infrastructure as Code
+- Portainer comme outil d'appoint
+
+---
+
+## 🏭 Pour Ton Contexte Actuel
+
+Vu que tu apprends et veux **comprendre ton infrastructure** :
+
+### Recommandation : **Approche Hybride**
+
+1. **Portainer** pour débuter :
+   - Visualiser tes conteneurs
+   - Comprendre les concepts
+   - Gérer facilement
+
+2. **Docker Engine** en parallèle :
+   - Apprendre les commandes
+   - Créer des scripts
+   - Comprendre le "pourquoi"
+
+---
+
+## 🎯 Plan d'Action Concret
+
+### Semaine 1-2 : Portainer
+- Installer Portainer
+- Déployer Passbolt via Portainer  
+- Explorer l'interface
+- Comprendre visuellement
+
+### Semaine 3-4 : Docker Engine
+- Refaire la même stack en CLI
+- Comparer les approches
+- Créer des scripts basiques
+
+### Semaine 5+ : Hybride
+- Portainer pour monitoring
+- Docker Engine pour déploiements
+- Scripts pour automatisation
+
+---
+
+## ⚠️ Points d'Attention
+
+### Éviter les Pièges Portainer
+- Ne pas devenir dépendant de l'interface
+- Toujours comprendre les commandes sous-jacentes
+- Versionner tes configurations (YAML)
+
+### Éviter les Pièges Docker Engine
+- Ne pas négliger la surveillance
+- Bien documenter tes scripts
+- Mettre en place des backups
