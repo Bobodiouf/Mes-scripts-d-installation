@@ -3,372 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Gestionnaires de mots de passe - KeePass VS PassBolt</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #da0000 0%, #ff0000 100%);
-            color: #333;
-            overflow: hidden;
-        }
-
-        .presentation-container {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .slide {
-            display: none;
-            padding: 40px 60px;
-            height: 100vh;
-            background: white;
-            box-sizing: border-box;
-            animation: slideIn 0.5s ease-in-out;
-        }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        h1 {
-            font-size: 2.5em;
-            color: #da0000;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #ff0000;
-            padding-bottom: 10px;
-        }
-
-        h2 {
-            font-size: 2em;
-            color: #da0000;
-            margin-bottom: 25px;
-        }
-
-        h3 {
-            font-size: 1.5em;
-            color: #343A40;
-            margin-bottom: 15px;
-        }
-
-        .subtitle {
-            font-size: 1.3em;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .authors {
-            font-size: 1.1em;
-            color: #ff0000;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .date {
-            font-size: 1em;
-            color: #666;
-        }
-
-        ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        li {
-            margin: 15px 0;
-            padding: 10px 0 10px 30px;
-            position: relative;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
-
-        .bullet-point::before {
-            content: "▶";
-            color: #ff0000;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-
-        .numbered li::before {
-            content: counter(item) ".";
-            counter-increment: item;
-            color: #da0000;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-
-        .numbered {
-            counter-reset: item;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 20px;
-        }
-
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 1em;
-        }
-
-        .comparison-table th {
-            background: #da0000;
-            color: white;
-            padding: 15px;
-            text-align: left;
-        }
-
-        .comparison-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .comparison-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        .keepass-col {
-            background: #fff3cd;
-        }
-
-        .passbolt-col {
-            background: #d1ecf1;
-        }
-
-        .winner {
-            background: #d4edda !important;
-            font-weight: bold;
-        }
-
-        .process-step {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #ff0000;
-        }
-
-        .step-number {
-            background: #da0000;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-
-        .icon {
-            font-size: 1.5em;
-            margin-right: 10px;
-            color: #ff0000;
-        }
-
-        .highlight-box {
-            background: linear-gradient(135deg, #ff0000, #da0000);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .verdict-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        .pros-box {
-            background: #d4edda;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #ff0000;
-        }
-
-        .cons-box {
-            background: #f8d7da;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #dc3545;
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav-btn {
-            background: #da0000;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-
-        .nav-btn:hover {
-            background: #2d0000;
-        }
-
-        .nav-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .slide-counter {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(21, 0, 0, 0.9);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-
-        .architecture-diagram {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .benefit-card {
-            background: #e3f2fd;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border-top: 3px solid #da0000;
-        }
-
-        .benefit-card .icon {
-            font-size: 2em;
-            color: #da0000;
-            margin-bottom: 10px;
-        }
-
-        .title-slide {
-            text-align: center;
-            justify-content: center;
-            background: white;
-            color: black;
-        }
-
-        .title-slide h1 {
-            color: black;
-            font-size: 3em;
-            border: none;
-        }
-
-        .questions-slide {
-            text-align: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #ff0000, #da0000);
-            color: white;
-        }
-
-        .questions-slide h1 {
-            color: white;
-            font-size: 3.5em;
-            border: none;
-        }
-
-        /* Styles pour les images */
-        .screenshot-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .screenshot {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .screenshot-small {
-            max-width: 45%;
-            max-height: 300px;
-            object-fit: contain;
-        }
-
-        .screenshot-medium {
-            max-width: 80%;
-            max-height: 400px;
-            object-fit: contain;
-        }
-
-        .screenshot-large {
-            max-width: 90%;
-            max-height: 500px;
-            object-fit: contain;
-        }
-
-        .image-caption {
-            text-align: center;
-            font-style: italic;
-            color: #666;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-
-        .demo-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .demo-section h3 {
-            color: #da0000;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
     <div class="presentation-container">
@@ -387,31 +23,65 @@
         <!-- Slide 2: Sommaire -->
         <div class="slide">
             <h1>Sommaire</h1>
-            <ul class="numbered">
-                <li>Contexte : Enjeux de sécurité informatique</li>
-                <li>Objectifs de l'étude comparative</li>
-                <li>Solutions en présence</li>
-                <li>Installation et configuration KeePassXC</li>
-                <li>Interface et fonctionnalités KeePassXC</li>
-                <li>Intégration navigateur KeePassXC</li>
-                <li>Déploiement PassBolt - Infrastructure</li>
-                <li>Configuration PassBolt - Interface web</li>
-                <li>Installation PassBolt - Terminal</li>
-                <li>Authentification PassBolt</li>
-                <li>Processus d'intégration collaborateur</li>
-                <li>Configuration utilisateur PassBolt</li>
-                <li>Gestion collaborative - Groupes</li>
-                <li>Comparaison technique - Résultats</li>
-                <li>Verdict : PassBolt retenu pour l'équipe</li>
-                <li>Bénéfices concrets observés</li>
-                <li>Recommandations pour déploiement</li>
-                <li>Questions & Discussion</li>
-            </ul>
+            <div class="two-column">
+                <div class="bullet-point">
+                    <div class="process-step">
+                        <div class="step-number">1</div>
+                        <div><strong>Présentation de l'étude comparative</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">2</div>
+                        <div><strong>Contexte - Problématique et Objectifs de l'étude comparative</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">3</div>                        
+                        <div><strong>Solutions en présence</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">4</div>
+                        <div><strong>Installation et configuration KeePassXC</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">5</div>
+                        <div><strong>Prise en main et intégration KeePassXC sur navigateur</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">6</div>
+                        <div><strong>Installation et configuration PassBolt</strong></div>
+                    </div>    
+                </div>
+                <div class="bullet-point">
+                    <div class="process-step">
+                        <div class="step-number">7</div>
+                        <div><strong>Prise en main intégration sur navigateur - Gestion utilisateurs et Groupes</strong></div>
+                    </div>                    
+                    <div class="process-step">
+                        <div class="step-number">8</div>
+                        <div><strong>Critères de comparaison</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">9</div>
+                        <div><strong>Retour d'expérience PassBolt</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">10</div>
+                        <div><strong>Choix de la solution retenue</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">11</div>
+                        <div><strong>Bénéfices observés</strong></div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">12</div>
+                        <div><strong>Recommandations pour un déploiement réussi et Script d'installation de PassBolt</strong></div>
+                    </div>
+                </div>
+            </div>
             <div class="highlight-box">
                 <strong>Parcours :</strong> De l'analyse à la mise en œuvre, puis recommandations
             </div>
         </div>
-        <!-- Slide 3: Contexte -->
+        <!-- Slide 2: Contexte -->
         <div class="slide">
             <h1>Contexte : Enjeux de sécurité informatique</h1>
             <ul class="bullet-point">
@@ -426,7 +96,7 @@
             </div>
         </div>
 
-        <!-- Slide 4: Objectifs -->
+        <!-- Slide 3: Objectifs -->
         <div class="slide">
             <h1>Objectifs de l'étude comparative</h1>
             <ul class="numbered">
@@ -440,7 +110,7 @@
             </div>
         </div>
 
-        <!-- Slide 5: Solutions étudiées -->
+        <!-- Slide 4: Solutions étudiées -->
         <div class="slide">
             <h1>Solutions en présence</h1>
             <div class="two-column">
@@ -473,18 +143,36 @@
             <div class="demo-section">
                 <h3>Processus d'installation</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID1.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
+                    <img src="/keepassxc/1.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
                 </div>
                 <div class="image-caption">Assistant d'installation KeePassXC</div>
             </div>
-            
+        </div>
+        <div class="slide">
             <div class="demo-section">
-                <h3>Création de base de données</h3>
+                <h3>Processus d'installation</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID2.png" alt="Configuration base KeePassXC" class="screenshot screenshot-small">
-                    <img src="https://i.imgur.com/YourImageID3.png" alt="Paramètres chiffrement KeePassXC" class="screenshot screenshot-small">
+                    <img src="/keepassxc/2.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
                 </div>
-                <div class="image-caption">Configuration de la base de données et paramètres de chiffrement</div>
+                <div class="image-caption">Assistant d'installation KeePassXC</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <h3>Processus d'installation</h3>
+                <div class="screenshot-container">
+                    <img src="/keepassxc/3.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Assistant d'installation KeePassXC</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <h3>Processus d'installation</h3>
+                <div class="screenshot-container">
+                    <img src="/keepassxc/4.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Assistant d'installation KeePassXC</div>
             </div>
         </div>
 
@@ -492,22 +180,52 @@
         <div class="slide">
             <h1>Interface et fonctionnalités KeePassXC</h1>
             <div class="demo-section">
-                <h3>Saisie du mot de passe maître</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID4.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                    <img src="keepassxc/6.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
                 </div>
-                <div class="image-caption">Écran d'authentification avec mot de passe maître</div>
-            </div>
-
-            <div class="demo-section">
-                <h3>Extension navigateur</h3>
-                <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID5.png" alt="Extension KeePassXC Chrome" class="screenshot screenshot-small">
-                    <img src="https://i.imgur.com/YourImageID6.png" alt="Installation extension" class="screenshot screenshot-small">
-                </div>
-                <div class="image-caption">Extension KeePassXC-Browser pour Chrome</div>
+                <div class="image-caption">Écran d'accueil KeePassXC</div>
             </div>
         </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/7.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Création de la base de données</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/8.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Paramètre de chiffrement de la base de données</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/9.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Création de la passe Phrase de la base de données - Manuellement</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/10.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Ruban de menu KeePassXC - Gestion des entrées</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/11.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Création d'une entrée - Remplissage des informations</div>
+            </div>
+        </div> 
 
         <!-- Slide 7: Intégration KeePassXC -->
         <div class="slide">
@@ -515,34 +233,45 @@
             <div class="demo-section">
                 <h3>Configuration extension</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID7.png" alt="Configuration extension" class="screenshot screenshot-medium">
+                    <img src="keepassxc/14.png" alt="Configuration extension" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Ajout de l'extension KeePassXC-Browser</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/15.png" alt="Configuration extension" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Validation de l'extension</div>
+            </div>
+        </div>
+        <div class="slide">
+            <h1>Intégration navigateur KeePassXC</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/16.png" alt="Configuration extension" class="screenshot screenshot-medium">
                 </div>
                 <div class="image-caption">Notification de configuration réussie de l'extension</div>
-            </div>
-
-            <div class="demo-section">
-                <h3>Association avec la base de données</h3>
-                <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID8.png" alt="Association base KeePassXC" class="screenshot screenshot-medium">
-                </div>
-                <div class="image-caption">Demande d'association entre extension et base de données</div>
             </div>
         </div>
 
         <!-- Slide 8: Installation PassBolt -->
         <div class="slide">
-            <h1>Déploiement PassBolt - Infrastructure</h1>
-            <div class="demo-section">
-                <h3>Configuration système</h3>
-                <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID9.png" alt="Configuration PassBolt" class="screenshot screenshot-medium">
-                </div>
-                <div class="image-caption">Interface de configuration PassBolt - System Check</div>
-            </div>
+            <h1>Déploiement PassBolt - Prérequis d'installation</h1>
 
             <div class="process-step">
                 <div class="step-number">1</div>
                 <div><strong>🔧 Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">1</div>
+                <div><strong>🛠️ Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
+            </div>
+            
+            <div class="process-step">
+                <div class="step-number">1</div>
+                <div><strong>🖥️ Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
             </div>
             <div class="process-step">
                 <div class="step-number">2</div>
