@@ -1,4 +1,4 @@
-<?php
+l<?php
 return [
         'App' => [
                 'fullBaseUrl' => 'https://passbolt.local'
@@ -9,8 +9,8 @@ return [
                         'host' => 'smtp.gmail.com',
                         'port' => 587,
                         'timeout' => 30,
-                        'username' => 'ismael.mouloungui@groupebatimat.com',
-                        'password' => 'hmob ypbv ooou heee',
+                        'username' => 'your_email@gmail.com',
+                        'password' => 'your_app_specific_password',
                         'client' => null,
                         'tls' => true,
                         'url' => null,

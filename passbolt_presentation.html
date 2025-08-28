@@ -311,6 +311,63 @@
             font-size: 3.5em;
             border: none;
         }
+
+        /* Styles pour les images */
+        .screenshot-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .screenshot-small {
+            max-width: 45%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        .screenshot-medium {
+            max-width: 80%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .screenshot-large {
+            max-width: 90%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+
+        .image-caption {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .demo-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .demo-section h3 {
+            color: #da0000;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -327,8 +384,34 @@
             <div class="date">14/07/2025 - GROUPE BATIMAT</div>
             <div style="margin-top: 40px; font-size: 3em;">🔐</div>
         </div>
-
-        <!-- Slide 2: Contexte -->
+        <!-- Slide 2: Sommaire -->
+        <div class="slide">
+            <h1>Sommaire</h1>
+            <ul class="numbered">
+                <li>Contexte : Enjeux de sécurité informatique</li>
+                <li>Objectifs de l'étude comparative</li>
+                <li>Solutions en présence</li>
+                <li>Installation et configuration KeePassXC</li>
+                <li>Interface et fonctionnalités KeePassXC</li>
+                <li>Intégration navigateur KeePassXC</li>
+                <li>Déploiement PassBolt - Infrastructure</li>
+                <li>Configuration PassBolt - Interface web</li>
+                <li>Installation PassBolt - Terminal</li>
+                <li>Authentification PassBolt</li>
+                <li>Processus d'intégration collaborateur</li>
+                <li>Configuration utilisateur PassBolt</li>
+                <li>Gestion collaborative - Groupes</li>
+                <li>Comparaison technique - Résultats</li>
+                <li>Verdict : PassBolt retenu pour l'équipe</li>
+                <li>Bénéfices concrets observés</li>
+                <li>Recommandations pour déploiement</li>
+                <li>Questions & Discussion</li>
+            </ul>
+            <div class="highlight-box">
+                <strong>Parcours :</strong> De l'analyse à la mise en œuvre, puis recommandations
+            </div>
+        </div>
+        <!-- Slide 3: Contexte -->
         <div class="slide">
             <h1>Contexte : Enjeux de sécurité informatique</h1>
             <ul class="bullet-point">
@@ -343,7 +426,7 @@
             </div>
         </div>
 
-        <!-- Slide 3: Objectifs -->
+        <!-- Slide 4: Objectifs -->
         <div class="slide">
             <h1>Objectifs de l'étude comparative</h1>
             <ul class="numbered">
@@ -357,7 +440,7 @@
             </div>
         </div>
 
-        <!-- Slide 4: Solutions étudiées -->
+        <!-- Slide 5: Solutions étudiées -->
         <div class="slide">
             <h1>Solutions en présence</h1>
             <div class="two-column">
@@ -384,46 +467,209 @@
             </div>
         </div>
 
-        <!-- Slide 5: Critères de comparaison -->
+        <!-- Slide 5: Installation KeePassXC -->
         <div class="slide">
-            <h1>Critères d'évaluation technique</h1>
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="icon">🛡️</div>
-                    <h3>Sécurité</h3>
-                    <p>Chiffrement, authentification</p>
+            <h1>Installation et configuration KeePassXC</h1>
+            <div class="demo-section">
+                <h3>Processus d'installation</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID1.png" alt="Installation KeePassXC" class="screenshot screenshot-medium">
                 </div>
-                <div class="benefit-card">
-                    <div class="icon">👥</div>
-                    <h3>Collaboration</h3>
-                    <p>Partage, gestion d'équipe</p>
+                <div class="image-caption">Assistant d'installation KeePassXC</div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>Création de base de données</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID2.png" alt="Configuration base KeePassXC" class="screenshot screenshot-small">
+                    <img src="https://i.imgur.com/YourImageID3.png" alt="Paramètres chiffrement KeePassXC" class="screenshot screenshot-small">
                 </div>
-                <div class="benefit-card">
-                    <div class="icon">🔧</div>
-                    <h3>Déploiement</h3>
-                    <p>Installation, maintenance</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🔄</div>
-                    <h3>Intégration</h3>
-                    <p>API, LDAP, DevOps</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">📱</div>
-                    <h3>Interface</h3>
-                    <p>UX, ergonomie</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">📊</div>
-                    <h3>Audit</h3>
-                    <p>Traçabilité, logs</p>
-                </div>
+                <div class="image-caption">Configuration de la base de données et paramètres de chiffrement</div>
             </div>
         </div>
 
-        <!-- Slide 6: Comparaison 1/2 -->
+        <!-- Slide 6: Interface KeePassXC -->
         <div class="slide">
-            <h1>Comparaison technique - Partie 1</h1>
+            <h1>Interface et fonctionnalités KeePassXC</h1>
+            <div class="demo-section">
+                <h3>Saisie du mot de passe maître</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID4.png" alt="Authentification KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Écran d'authentification avec mot de passe maître</div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Extension navigateur</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID5.png" alt="Extension KeePassXC Chrome" class="screenshot screenshot-small">
+                    <img src="https://i.imgur.com/YourImageID6.png" alt="Installation extension" class="screenshot screenshot-small">
+                </div>
+                <div class="image-caption">Extension KeePassXC-Browser pour Chrome</div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Intégration KeePassXC -->
+        <div class="slide">
+            <h1>Intégration navigateur KeePassXC</h1>
+            <div class="demo-section">
+                <h3>Configuration extension</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID7.png" alt="Configuration extension" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Notification de configuration réussie de l'extension</div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Association avec la base de données</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID8.png" alt="Association base KeePassXC" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Demande d'association entre extension et base de données</div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Installation PassBolt -->
+        <div class="slide">
+            <h1>Déploiement PassBolt - Infrastructure</h1>
+            <div class="demo-section">
+                <h3>Configuration système</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID9.png" alt="Configuration PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Interface de configuration PassBolt - System Check</div>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">1</div>
+                <div><strong>🔧 Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">2</div>
+                <div><strong>🌐 Installation services</strong><br>Nginx + MariaDB + dépendances</div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">3</div>
+                <div><strong>📦 Installation PassBolt CE</strong><br>Package Debian, référentiel officiel</div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Interface PassBolt -->
+        <div class="slide">
+            <h1>Configuration PassBolt - Interface web</h1>
+            <div class="demo-section">
+                <h3>Installation complète</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID10.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Extension Firefox</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID11.png" alt="Extension PassBolt Firefox" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Installation de l'extension PassBolt pour Firefox</div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Terminal PassBolt -->
+        <div class="slide">
+            <h1>Installation PassBolt - Terminal</h1>
+            <div class="demo-section">
+                <h3>Processus d'installation via terminal</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID12.png" alt="Terminal installation PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Installation PassBolt via terminal - Génération des clés JWT</div>
+            </div>
+            
+            <ul class="bullet-point">
+                <li><strong>Génération automatique</strong> des clés de sécurité</li>
+                <li><strong>Configuration base de données</strong> MariaDB</li>
+                <li><strong>Paramétrage HTTPS</strong> avec certificats SSL</li>
+            </ul>
+        </div>
+
+        <!-- Slide 11: Authentification PassBolt -->
+        <div class="slide">
+            <h1>Authentification PassBolt</h1>
+            <div class="demo-section">
+                <h3>Interface de connexion</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID13.png" alt="Connexion PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Interface d'authentification PassBolt avec phrase de passe</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Sécurité renforcée :</strong> Authentification par clé privée + phrase de passe + MFA optionnel
+            </div>
+        </div>
+
+        <!-- Slide 12: Onboarding PassBolt -->
+        <div class="slide">
+            <h1>Processus d'intégration collaborateur</h1>
+            <div class="demo-section">
+                <h3>Invitation automatique par email</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID14.png" alt="Email invitation PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Email d'invitation automatique envoyé au nouvel utilisateur</div>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">1</div>
+                <div><strong>👤 Création compte</strong><br>Admin IT crée le compte dans PassBolt</div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">2</div>
+                <div><strong>📧 Invitation automatique</strong><br>Email d'invitation envoyé automatiquement</div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">3</div>
+                <div><strong>🔧 Configuration compte</strong><br>Utilisateur configure son profil de sécurité</div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Configuration utilisateur PassBolt -->
+        <div class="slide">
+            <h1>Configuration utilisateur PassBolt</h1>
+            <div class="demo-section">
+                <h3>Personnalisation du profil</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID15.png" alt="Configuration profil PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Configuration du jeton de sécurité et personnalisation</div>
+            </div>
+
+            <ul class="bullet-point">
+                <li><strong>Jeton de sécurité visuel</strong> contre le phishing</li>
+                <li><strong>Phrase de passe personnelle</strong> pour le chiffrement</li>
+                <li><strong>Génération clés GPG</strong> automatique</li>
+            </ul>
+        </div>
+
+        <!-- Slide 14: Gestion des groupes -->
+        <div class="slide">
+            <h1>Gestion collaborative - Groupes</h1>
+            <div class="demo-section">
+                <h3>Interface de création de groupes</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID16.png" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Interface de création et gestion des groupes d'utilisateurs</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Avantage collaboratif :</strong> Partage granulaire des droits et permissions par groupe
+            </div>
+        </div>
+
+        <!-- Slide 15: Comparaison technique -->
+        <div class="slide">
+            <h1>Comparaison technique - Résultats</h1>
             <table class="comparison-table">
                 <thead>
                     <tr>
@@ -439,61 +685,25 @@
                         <td class="passbolt-col winner">Serveur web (Debian, Docker)</td>
                     </tr>
                     <tr>
-                        <td><strong>Sécurité</strong></td>
-                        <td class="keepass-col">AES-256, ChaCha20, Argon2</td>
-                        <td class="passbolt-col winner">OpenPGP E2E, MFA</td>
+                        <td><strong>Collaboration</strong></td>
+                        <td class="keepass-col">Partage manuel de fichiers</td>
+                        <td class="passbolt-col winner">Partage sécurisé temps réel</td>
                     </tr>
                     <tr>
-                        <td><strong>Authentification</strong></td>
-                        <td class="keepass-col">Mot de passe maître, fichier clé</td>
-                        <td class="passbolt-col winner">Clé privée + phrase secrète + MFA</td>
+                        <td><strong>Gestion équipe</strong></td>
+                        <td class="keepass-col">Aucun contrôle centralisé</td>
+                        <td class="passbolt-col winner">Groupes, rôles, permissions</td>
                     </tr>
-                    <tr>
-                        <td><strong>Partage</strong></td>
-                        <td class="keepass-col">Manuel (fichier partagé)</td>
-                        <td class="passbolt-col winner">Granulaire, groupes, rôles</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Slide 7: Comparaison 2/2 -->
-        <div class="slide">
-            <h1>Comparaison technique - Partie 2</h1>
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Critère</th>
-                        <th>KeePassXC</th>
-                        <th>PassBolt</th>
-                    </tr>
-                </thead>
-                <tbody>
                     <tr>
                         <td><strong>Interface</strong></td>
-                        <td class="keepass-col">Simple, locale</td>
-                        <td class="passbolt-col winner">Web responsive, moderne</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Gestion utilisateurs</strong></td>
-                        <td class="keepass-col">Aucun contrôle natif</td>
-                        <td class="passbolt-col winner">Centralisée (LDAP/AD)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Intégration</strong></td>
-                        <td class="keepass-col">Extensions navigateur, SSH</td>
-                        <td class="passbolt-col winner">API REST, CLI, DevOps</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Environnement</strong></td>
-                        <td class="keepass-col">Individuel, isolé</td>
-                        <td class="passbolt-col winner">Équipe, professionnel</td>
+                        <td class="keepass-col">Application desktop</td>
+                        <td class="passbolt-col winner">Interface web moderne</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Slide 8: Verdict -->
+        <!-- Slide 16: Verdict -->
         <div class="slide">
             <h1>Verdict : PassBolt retenu pour l'équipe</h1>
             <div class="verdict-section">
@@ -504,7 +714,7 @@
                             <li>Excellent en usage individuel</li>
                             <li>Sécurité robuste locale</li>
                             <li>Légèreté, sans infrastructure</li>
-                            <li>Portabilité simple</li>
+                            <li>Extension navigateur efficace</li>
                         </ul>
                     </div>
                 </div>
@@ -512,171 +722,25 @@
                     <div class="highlight-box">
                         <h3>🏆 PassBolt - Avantages décisifs</h3>
                         <ul style="list-style: none; text-align: left;">
-                            <li>🏆 Collaboration native</li>
+                            <li>🏆 Collaboration native et sécurisée</li>
                             <li>🏆 Gestion centralisée des accès</li>
-                            <li>🏆 Intégration DevOps (API, CLI)</li>
-                            <li>🏆 Audit et traçabilité complète</li>
-                            <li>🏆 Interface moderne adaptée équipe</li>
+                            <li>🏆 Interface web intuitive</li>
+                            <li>🏆 Processus d'intégration automatisé</li>
+                            <li>🏆 Traçabilité complète des actions</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 9: Architecture -->
-        <div class="slide">
-            <h1>Architecture technique PassBolt</h1>
-            <div class="architecture-diagram">
-                <h3>🏗️ Infrastructure déployée</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0;">
-                    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px;">
-                        <strong>🖥️ Serveur</strong><br>
-                        Debian 12<br>
-                        IP: 192.168.1.14/24<br>
-                        Hostname: debian.test.com
-                    </div>
-                    <div style="background: #f3e5f5; padding: 20px; border-radius: 8px;">
-                        <strong>🌐 Web Server</strong><br>
-                        Nginx (HTTPS)<br>
-                        Certificat SSL auto-signé<br>
-                        Port 443
-                    </div>
-                    <div style="background: #e8f5e8; padding: 20px; border-radius: 8px;">
-                        <strong>🗃️ Base de données</strong><br>
-                        MariaDB<br>
-                        Base dédiée PassBolt<br>
-                        Utilisateur avec droits limités
-                    </div>
-                    <div style="background: #fff3e0; padding: 20px; border-radius: 8px;">
-                        <strong>📧 Messagerie</strong><br>
-                        Serveur SMTP Gmail<br>
-                        Notifications automatiques<br>
-                        Invitations utilisateurs
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 10: Déploiement -->
-        <div class="slide">
-            <h1>Processus de déploiement</h1>
-            <div class="process-step">
-                <div class="step-number">1</div>
-                <div><strong>🔧 Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">2</div>
-                <div><strong>🔐 Configuration SSL</strong><br>Certificat auto-signé, permissions fichiers</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">3</div>
-                <div><strong>🌐 Installation services</strong><br>Nginx + MariaDB + dépendances</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">4</div>
-                <div><strong>📦 Installation PassBolt CE</strong><br>Package Debian, référentiel officiel</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">5</div>
-                <div><strong>⚙️ Configuration web</strong><br>Base de données, GPG, SMTP via interface</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">6</div>
-                <div><strong>🎯 Tests et production</strong><br>Healthcheck, création admin, extension navigateur</div>
-            </div>
-        </div>
-
-        <!-- Slide 11: Onboarding -->
-        <div class="slide">
-            <h1>Cas pratique : Intégration collaborateur</h1>
-            <div class="highlight-box">
-                <strong>Situation :</strong> Ismael rejoint l'équipe IT
-            </div>
-            <div class="process-step">
-                <div class="step-number">1</div>
-                <div><strong>👤 Création compte</strong><br>Admin IT crée le compte Ismael dans PassBolt</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">2</div>
-                <div><strong>📧 Invitation automatique</strong><br>Email d'invitation envoyé automatiquement</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">3</div>
-                <div><strong>🔧 Configuration compte</strong><br>Ismael configure son compte + extension navigateur</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">4</div>
-                <div><strong>🔑 Partage sécurisé</strong><br>Partage identifiants groupe "Support IT" (AD, GLPI, serveurs)</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">5</div>
-                <div><strong>✅ Accès immédiat</strong><br>Aucun identifiant ne circule en clair par email</div>
-            </div>
-        </div>
-
-        <!-- Slide 12: Partage équipe -->
-        <div class="slide">
-            <h1>Partage sécurisé des identifiants</h1>
-            <div class="highlight-box">
-                <strong>Exemple :</strong> Plateforme Ticketing GLPI - Compte équipe partagé
-            </div>
-            <div class="two-column">
-                <div>
-                    <h3>🎯 Processus de partage</h3>
-                    <ul class="bullet-point">
-                        <li><strong>Ressource créée</strong> par responsable IT</li>
-                        <li><strong>Permissions</strong> lecture/écriture au groupe "Support IT"</li>
-                        <li><strong>Accès transparent</strong> pour tous les membres</li>
-                        <li><strong>Mise à jour centralisée</strong> du mot de passe</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3>🔒 Bénéfices sécurité</h3>
-                    <ul class="bullet-point">
-                        <li><strong>Aucun transit en clair</strong> des identifiants</li>
-                        <li><strong>Traçabilité complète</strong> des accès</li>
-                        <li><strong>Moins d'erreurs</strong> de saisie</li>
-                        <li><strong>Gestion centralisée</strong> des modifications</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 13: Offboarding -->
-        <div class="slide">
-            <h1>Gestion des départs : Sécurité renforcée</h1>
-            <div class="highlight-box">
-                <strong>Situation :</strong> Ismael quitte l'entreprise
-            </div>
-            <div class="process-step">
-                <div class="step-number">1</div>
-                <div><strong>🔒 Suspension immédiate</strong><br>Compte Ismael suspendu par admin IT</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">2</div>
-                <div><strong>🔄 Modification sécurisée</strong><br>Mots de passe partagés modifiés automatiquement</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">3</div>
-                <div><strong>✅ Continuité assurée</strong><br>Équipe restante garde accès aux ressources mises à jour</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">4</div>
-                <div><strong>📊 Traçabilité complète</strong><br>Historique des actions et modifications</div>
-            </div>
-            <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin-top: 20px;">
-                <strong>Résultat :</strong> Suppression rapide des accès + Continuité service + Réduction risque fuite
-            </div>
-        </div>
-
-        <!-- Slide 14: Bénéfices -->
+        <!-- Slide 17: Bénéfices observés -->
         <div class="slide">
             <h1>Bénéfices concrets observés</h1>
             <div class="benefits-grid">
                 <div class="benefit-card">
                     <div class="icon">⏱️</div>
                     <h3>Gain de temps</h3>
-                    <p>Réduction temps d'intégration nouveaux collaborateurs</p>
+                    <p>Intégration nouveaux collaborateurs en minutes</p>
                 </div>
                 <div class="benefit-card">
                     <div class="icon">🔐</div>
@@ -689,24 +753,18 @@
                     <p>Visibilité complète des accès et modifications</p>
                 </div>
                 <div class="benefit-card">
-                    <div class="icon">🛡️</div>
-                    <h3>Posture sécurité</h3>
-                    <p>Renforcement global de la sécurité IT</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🔄</div>
-                    <h3>Gestion simplifiée</h3>
-                    <p>Centralisation de la gestion des droits</p>
-                </div>
-                <div class="benefit-card">
                     <div class="icon">👥</div>
                     <h3>Collaboration</h3>
                     <p>Partage sécurisé fluide en équipe</p>
                 </div>
             </div>
+            
+            <div class="highlight-box">
+                <strong>🎯 Résultat :</strong> Professionnalisation complète de la gestion des identifiants
+            </div>
         </div>
 
-        <!-- Slide 15: Recommandations -->
+        <!-- Slide 18: Recommandations -->
         <div class="slide">
             <h1>Recommandations pour déploiement</h1>
             <div class="two-column">
@@ -722,19 +780,16 @@
                 <div>
                     <h3>🔧 Bonnes pratiques</h3>
                     <ul class="bullet-point">
-                        <li><strong>Indicateurs d'usage</strong> à mettre en place</li>
-                        <li><strong>Maintenance régulière</strong> et mises à jour</li>
-                        <li><strong>Sauvegarde</strong> des configurations</li>
+                        <li><strong>Sauvegarde régulière</strong> des configurations</li>
+                        <li><strong>Maintenance</strong> et mises à jour planifiées</li>
+                        <li><strong>Monitoring</strong> de l'usage et sécurité</li>
                         <li><strong>Documentation</strong> procédures équipe</li>
                     </ul>
                 </div>
             </div>
-            <div class="highlight-box">
-                <strong>🎯 Conclusion :</strong> PassBolt s'impose comme solution de référence pour la gestion collaborative sécurisée des mots de passe en environnement professionnel
-            </div>
         </div>
 
-        <!-- Slide 16: Questions -->
+        <!-- Slide 19: Questions -->
         <div class="slide questions-slide">
             <h1>Questions & Discussion</h1>
             <div style="font-size: 1.5em; margin: 40px 0;">
@@ -757,7 +812,7 @@
 
     <!-- Compteur de slides -->
     <div class="slide-counter">
-        <span id="currentSlide">1</span> / <span id="totalSlides">16</span>
+        <span id="currentSlide">1</span> / <span id="totalSlides">19</span>
     </div>
 
     <script>
@@ -1057,10 +1112,18 @@
                 padding: 8px 15px;
                 font-size: 14px;
             }
+
+            .screenshot-container {
+                flex-direction: column;
+            }
+
+            .screenshot-small {
+                max-width: 100%;
+            }
         }
 
         /* Animation pour les éléments */
-        .benefit-card, .process-step, .pros-box, .cons-box {
+        .benefit-card, .process-step, .pros-box, .cons-box, .demo-section {
             animation: fadeInUp 0.6s ease-out;
         }
 
@@ -1076,7 +1139,7 @@
         }
 
         /* Effet hover pour les cartes */
-        .benefit-card:hover {
+        .benefit-card:hover, .demo-section:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
             transition: all 0.3s ease;

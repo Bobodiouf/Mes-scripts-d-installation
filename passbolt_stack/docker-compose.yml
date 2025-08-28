@@ -1,91 +1,78 @@
-version: '3.8'
-
 services:
-    passbolt_app:
-        image: passbolt/passbolt:latest
-        container_name: passbolt_app
-        restart: unless-stopped
-        environment:
-            # Configuration de la base de données
-            DATASOURCES_DEFAULT_HOST: passbolt_db
-            DATASOURCES_DEFAULT_USERNAME: passbolt
-            DATASOURCES_DEFAULT_PASSWORD: Passer
-            DATASOURCES_DEFAULT_DATABASE: passbolt
-            
-            # Configuration SMTP Gmail
-            EMAIL_TRANSPORT_DEFAULT_CLASS: Smtp
-            EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
-            EMAIL_TRANSPORT_DEFAULT_PORT: 587
-            EMAIL_TRANSPORT_DEFAULT_USERNAME: ismael.mouloungui@groupebatimat.com
-            EMAIL_TRANSPORT_DEFAULT_PASSWORD: hmob ypbv ooou heee
-            EMAIL_TRANSPORT_DEFAULT_TLS: true
-            EMAIL_DEFAULT_FROM: Passbolt <ismael.mouloungui@groupebatimat.com>
-            EMAIL_DEFAULT_FROM_NAME: Passbolt
-            
-            # Configuration de l'application
-            APP_FULL_BASE_URL: https://passbolt.local
+  passbolt_app:
+    image: passbolt/passbolt:latest
+    container_name: passbolt_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Database configuration
+      DATASOURCES_DEFAULT_HOST: passbolt_db
+      DATASOURCES_DEFAULT_USERNAME: passbolt
+      DATASOURCES_DEFAULT_PASSWORD: your_secure_db_password
+      DATASOURCES_DEFAULT_DATABASE: passbolt
+      
+      # Gmail SMTP configuration
+      EMAIL_TRANSPORT_DEFAULT_CLASS: Smtp
+      EMAIL_TRANSPORT_DEFAULT_HOST: smtp.gmail.com
+      EMAIL_TRANSPORT_DEFAULT_PORT: 587
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: your_email@gmail.com
+      EMAIL_TRANSPORT_DEFAULT_PASSWORD: your_app_specific_password
+      EMAIL_TRANSPORT_DEFAULT_TLS: "true"
+      EMAIL_DEFAULT_FROM: your_email@gmail.com
+      
+      # App configuration
+      APP_FULL_BASE_URL: https://passbolt.your-domain.com
+      
+      # SSL configuration (self-signed)
+      PASSBOLT_SSL_FORCE: "true"
+      
+      # NTP configuration
+      NTP_SERVER: pool.ntp.org
+      
+    volumes:
+      - gpg_data:/etc/passbolt/gpg
+      - jwt_data:/etc/passbolt/jwt
+      - ./ssl:/etc/ssl/certs/passbolt
+    networks:
+      - passbolt_network
+    depends_on:
+      passbolt_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-            # Configuration SSL (auto-signé)
-            PASSBOLT_SSL_FORCE: true
-            PASSBOLT_SSL_SETUP: true
-            
-            # Configuration NTP
-            NTP_SERVER: pool.ntp.org
-            
-        volumes:
-            - gpg_data:/etc/passbolt/gpg
-            - jwt_data:/etc/passbolt/jwt
-            - ssl_data:/etc/ssl/certs/passbolt
-            - ./config/passbolt.php:/etc/passbolt/passbolt.php
-        networks:
-            - passbolt_network
-        depends_on:
-            - passbolt_db
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-
-    passbolt_db:
-        image: mariadb:10.11
-        container_name: passbolt_db
-        restart: unless-stopped
-        environment:
-            MYSQL_ROOT_PASSWORD: Passer
-            MYSQL_DATABASE: passbolt
-            MYSQL_USER: passbolt
-            MYSQL_PASSWORD: Passer
-        volumes:
-            - db_data:/var/lib/mysql
-        networks:
-            - passbolt_network
-        command: 
-            - --default-time-zone=+00:00
-            - --log-bin-trust-function-creators=1
-
-    nginx:
-        image: nginx:alpine
-        container_name: passbolt_nginx
-        restart: unless-stopped
-        ports:
-            - "443:443"
-            - "80:80"
-        volumes:
-            - ./nginx.conf:/etc/nginx/nginx.conf
-            - ssl_data:/etc/ssl/certs/passbolt:ro
-            - ./html:/usr/share/nginx/html:ro
-        networks:
-            - passbolt_network
-        depends_on:
-            - passbolt_app
+  passbolt_db:
+    image: mariadb:10.11
+    container_name: passbolt_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: your_secure_root_db_password
+      MYSQL_DATABASE: passbolt
+      MYSQL_USER: passbolt
+      MYSQL_PASSWORD: your_secure_db_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - passbolt_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: 
+      - --default-time-zone=+00:00
+      - --log-bin-trust-function-creators=1
 
 volumes:
-    gpg_data:
-    jwt_data:
-    db_data:
-    ssl_data:
+  gpg_data:
+  jwt_data:
+  db_data:
 
 networks:
-    passbolt_network:
-        driver: bridge
+  passbolt_network:
+    driver: bridge
