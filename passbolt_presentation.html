@@ -83,7 +83,15 @@
         </div>
         <!-- Slide 2: Contexte -->
         <div class="slide">
-            <h1>Contexte : Enjeux de sécurité informatique</h1>
+            <h1>Contexte : Gestion partagée et collaboration sécurisée</h1>
+            <div class="demo-section">
+                <h3>coffre-fort numérique pour équipes</h3>
+                <div class="screenshot-container">
+                    <img src="https://i.imgur.com/YourImageID12.png" alt="Terminal installation PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Installation PassBolt via terminal - Génération des clés JWT</div>
+            </div>
+            <!-- <h1>Contexte : Enjeux de sécurité informatique</h1>
             <ul class="bullet-point">
                 <li><strong>Gestion manuelle dispersée et peu sécurisée</strong> des mots de passe</li>
                 <li><strong>Risques croissants :</strong> fuites de données, accès non autorisés</li>
@@ -93,7 +101,7 @@
             </ul>
             <div class="highlight-box">
                 <strong>🎯 Enjeu majeur :</strong> Renforcer la première ligne de défense contre les cyberattaques
-            </div>
+            </div> -->
         </div>
 
         <!-- Slide 3: Objectifs -->
@@ -258,56 +266,72 @@
 
         <!-- Slide 8: Installation PassBolt -->
         <div class="slide">
-            <h1>Déploiement PassBolt - Prérequis d'installation</h1>
+            <h1>Déploiement PassBolt - Cas d'installation</h1>
 
             <div class="process-step">
                 <div class="step-number">1</div>
-                <div><strong>🔧 Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
-            </div>
-            <div class="process-step">
-                <div class="step-number">1</div>
-                <div><strong>🛠️ Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
+                <div><strong>🛠️ Installation native</strong><br><br>Docker - Kubernetes - Ubuntu - Debian (retenue) - RedHat - Raspberry - RockyLinux - AlmaLinux - OracleLinux - openSUSE - SLES</div>
             </div>
             
             <div class="process-step">
-                <div class="step-number">1</div>
-                <div><strong>🖥️ Préparation système</strong><br>Debian 12, configuration réseau, ports (22, 80, 443)</div>
-            </div>
-            <div class="process-step">
                 <div class="step-number">2</div>
-                <div><strong>🌐 Installation services</strong><br>Nginx + MariaDB + dépendances</div>
+                <div><strong>🖥️ Deploiement Cloud </strong><br><br>AWS ou DigitalOcean</div>
             </div>
             <div class="process-step">
                 <div class="step-number">3</div>
-                <div><strong>📦 Installation PassBolt CE</strong><br>Package Debian, référentiel officiel</div>
+                <div><strong>🌐 Installation from scratch </strong><br><br>Configuration de l'API Passbolt à partir de la source - sur github.</div>
+            </div>
+            <div class="highlight-box">
+                <strong>Environnement retenu - Serveur Debian 12 : </strong> 2 cœurs et 2 Go de RAM - réseau local uniquement - Certificat Auto-signé - Serveur SMTP Gmail - Nginx et MariaDB
             </div>
         </div>
 
         <!-- Slide 9: Interface PassBolt -->
         <div class="slide">
-            <h1>Configuration PassBolt - Interface web</h1>
+            <h1>Installation PassBolt - Terminal</h1>
             <div class="demo-section">
-                <h3>Installation complète</h3>
+                <h3>Processus d'installation via terminal</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID10.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
+                    <img src="keepassxc/capture36.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
                 </div>
                 <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
             </div>
-
+        </div>
+        <div class="slide">
             <div class="demo-section">
-                <h3>Extension Firefox</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID11.png" alt="Extension PassBolt Firefox" class="screenshot screenshot-medium">
+                    <img src="keepassxc/capture37.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
                 </div>
-                <div class="image-caption">Installation de l'extension PassBolt pour Firefox</div>
+                <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="keepassxc/capture39.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="demo-section">
+                <h3>Installation complète</h3>
+                <div class="screenshot-container">
+                    <img src="keepassxc/capture40.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
+            </div>
+            
+            <div class="highlight-box">
+                <strong>⚠️ Attention : l'environnement doit être préalablement configuré, afin de garantir le bon déroulement de l'installation. </strong> Notre script d'installation prend en compte les spécificités de l'environnement Debian 12.
             </div>
         </div>
 
         <!-- Slide 10: Terminal PassBolt -->
         <div class="slide">
-            <h1>Installation PassBolt - Terminal</h1>
+            <h1>Installation PassBolt - Interface web</h1>
             <div class="demo-section">
-                <h3>Processus d'installation via terminal</h3>
+                <h3>Assistant d'installation et de configuration</h3>
                 <div class="screenshot-container">
                     <img src="https://i.imgur.com/YourImageID12.png" alt="Terminal installation PassBolt" class="screenshot screenshot-large">
                 </div>
@@ -360,6 +384,7 @@
                 <div class="step-number">3</div>
                 <div><strong>🔧 Configuration compte</strong><br>Utilisateur configure son profil de sécurité</div>
             </div>
+            
         </div>
 
         <!-- Slide 13: Configuration utilisateur PassBolt -->
