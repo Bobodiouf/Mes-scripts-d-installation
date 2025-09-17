@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Gestionnaires de mots de passe - KeePass VS PassBolt</title>
+    <title>Gestionnaires de mots de passe - Prometheus+Grafana & Wazuh</title>
 </head>
 <body>
     <div class="presentation-container">
@@ -14,11 +14,36 @@
             <div>
                 <img src="https://github.com/Bobodiouf/Mes-scripts-d-installation/blob/main/Image1.png?raw=true" alt="">
             </div><br><br><br>
-            <h1>Étude comparative et déploiement d'un gestionnaire de mots de passe open source</h1>
-            <div class="subtitle">KeePass VS PassBolt</div>
+            <h1>Étude comparative entre Prometheus + Grafana et Wazuh, et mise en œuvre pratique de la supervision système et sécurité</h1>
+            <div class="subtitle">Prometheus+Grafana & Wazuh</div>
             <div class="authors">Ismael MOULOUNGUI & JEAN.P.N. SENE</div>
-            <div class="date">14/07/2025 - GROUPE BATIMAT</div>
-            <div style="margin-top: 40px; font-size: 3em;">🔐</div>
+            <div class="date">12/09/2025 - GROUPE BATIMAT</div>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 40px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Prometheus_Logo.png" alt="Logo Prometheus" style="height: 60px; width: auto;">
+                <img src="https://grafana.com/static/img/logos/grafana/grafana-logo.svg" alt="Logo Grafana" style="height: 60px; width: auto;">
+                <img src="https://wazuh.com/wp-content/uploads/2022/07/wazuh_logo.svg" alt="Logo Wazuh" style="height: 60px; width: auto;">
+            </div>
+        </div>
+        <!-- Slide 2: Contexte -->
+        <div class="slide">
+            <h1>Contexte dans BATIMAT et Enjeu Global</h1>
+            <div class="demo-section">
+                <h3>présentation du groupe</h3>
+                <div class="screenshot-container">
+                    <img src="keepassxc/collaboration.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
+                    <img src="keepassxc/1.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
+                    <img src="keepassxc/collaboration2.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
+                </div>
+                <div class="image-caption">
+                    KeePass (gauche) - PassBolt (droite) - KeePassXC (centre)
+                </div>
+            </div>
+            <div class="highlight-box black">
+                <strong><span class="icon">🏐</span> GOAL :</strong> Trouver la solution optimale pour une gestion sécurisée et collaborative des mots de passe en équipe
+                <p style="font-size: 1.2em; margin-top: 20px; text-align: justify;">
+                    Cette étude comparative analyse les gestionnaires de mots de passe open source KeePass, KeePassXC et PassBolt. L'objectif est d'évaluer leurs fonctionnalités, leur sécurité et leur capacité à répondre aux besoins d'une gestion collective des identifiants en équipe. À travers des tests pratiques et une analyse technique, le rapport vise à déterminer la solution la plus adaptée pour un environnement collaboratif et sécurisé.
+                </p>
+            </div>
         </div>
         <!-- Slide 2: Sommaire -->
         <div class="slide">
@@ -27,52 +52,44 @@
                 <div class="bullet-point">
                     <div class="process-step">
                         <div class="step-number">1</div>
-                        <div><strong>Présentation de l'étude comparative</strong></div>
-                    </div>
-                    <div class="process-step">
-                        <div class="step-number">2</div>
                         <div><strong>Contexte - Problématique et Objectifs de l'étude comparative</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">3</div>                        
+                        <div class="step-number">2</div>                        
                         <div><strong>Solutions en présence</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">4</div>
+                        <div class="step-number">3</div>
                         <div><strong>Installation et configuration KeePassXC</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">5</div>
+                        <div class="step-number">4</div>
                         <div><strong>Prise en main et intégration KeePassXC sur navigateur</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">6</div>
+                        <div class="step-number">5</div>
                         <div><strong>Installation et configuration PassBolt</strong></div>
                     </div>    
                 </div>
                 <div class="bullet-point">
                     <div class="process-step">
-                        <div class="step-number">7</div>
+                        <div class="step-number">6</div>
                         <div><strong>Prise en main intégration sur navigateur - Gestion utilisateurs et Groupes</strong></div>
                     </div>                    
                     <div class="process-step">
-                        <div class="step-number">8</div>
+                        <div class="step-number">7</div>
                         <div><strong>Critères de comparaison</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">9</div>
+                        <div class="step-number">8</div>
                         <div><strong>Retour d'expérience PassBolt</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">10</div>
-                        <div><strong>Choix de la solution retenue</strong></div>
-                    </div>
-                    <div class="process-step">
-                        <div class="step-number">11</div>
+                        <div class="step-number">9</div>
                         <div><strong>Bénéfices observés</strong></div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">12</div>
+                        <div class="step-number">10</div>
                         <div><strong>Recommandations pour un déploiement réussi et Script d'installation de PassBolt</strong></div>
                     </div>
                 </div>
@@ -81,37 +98,56 @@
                 <strong>Parcours d'étude :</strong> De l'analyse à la mise en œuvre, puis les recommandations des outils
             </div>
         </div>
-        <!-- Slide 2: Contexte -->
+        
+        <!-- Slide 3: Objectifs -->
         <div class="slide">
-            <h1>Contexte : Gestion partagée et collaboration sécurisée</h1>
-            <div class="demo-section">
-                <h3>coffre-fort numérique pour équipes</h3>
-                <div class="screenshot-container">
-                    <img src="keepassxc/collaboration.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
-                    <img src="keepassxc/1.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
-                    <img src="keepassxc/collaboration2.png" width="300"  alt="Terminal installation PassBolt" class="screenshot screenshot-large colabo">
+            <h1>Contexte </h1>
+            
+            <div class="bullet-point">
+                <div class="demo-section">
+                    <div class="screenshot-container contexte">
+                    </div>
+                    <div class="image-caption">Collaboration d'équipe - Gestion des mots de passe</div>
                 </div>
-                <div class="image-caption">Installation PassBolt via terminal - Génération des clés JWT</div>
+                <p>
+                    Dans le cadre de notre équipe IT, la gestion sécurisée et collaborative des mots de passe est cruciale. Les défis actuels incluent :
+                </p>
+                <div class="process-step" style="display: block;">
+                    <div><strong>Multiplication des outils métiers</strong> nécessitant des accès partagés (ERP, CRM, serveurs, cloud, etc.)</div>
+                    <div><strong>Gestion des accès</strong> : Qui a accès à quoi ?</div>
+                    <div><strong>Rotation fréquente des membres d'équipe</strong> (intégration/départ de collaborateurs)</div>
+                    <div><strong>Recommandations pour un déploiement réussi et Script d'installation de PassBolt</strong></div>
+                    <div><strong>Exposition aux attaques par phishing et compromission</strong> en cas de mauvaise gestion des mots de passe</div>
+                    <div><strong>Respect des normes de sécurité et conformité</strong> (RGPD, ISO, etc.) dans le partage des accès</div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🎯 Enjeu majeur :</strong> Renforcer la première ligne de défense contre les cyberattaques
+                </div>
             </div>
-            <!-- <h1>Contexte : Enjeux de sécurité informatique</h1>
-            <ul class="bullet-point">
+        </div>
+
+        <!-- Slide 3: Objectifs -->
+        <div class="slide">
+            <h1>Problématiques</h1>
+            <ul class="process-step" style="display: block;">
                 <li><strong>Gestion manuelle dispersée et peu sécurisée</strong> des mots de passe</li>
                 <li><strong>Risques croissants :</strong> fuites de données, accès non autorisés</li>
                 <li><strong>Perte d'informations critiques</strong> lors des changements d'équipe</li>
                 <li><strong>Besoin de professionnalisation</strong> des pratiques IT</li>
                 <li><strong>Objectif :</strong> Solution adaptée au travail en équipe technique</li>
             </ul>
-            <div class="highlight-box">
+            <div class="highlight-box black">
                 <strong>🎯 Enjeu majeur :</strong> Renforcer la première ligne de défense contre les cyberattaques
-            </div> -->
+            </div>
         </div>
 
         <!-- Slide 3: Objectifs -->
         <div class="slide">
             <h1>Objectifs de l'étude comparative</h1>
-            <ul class="numbered">
+            <ul class="process-step" style="display: block;">
                 <li><span class="icon">🔍</span><strong>Comparer</strong> deux solutions open source (locale vs collaborative)</li>
-                <li><span class="icon">🚀</span><strong>Déployer</strong> la solution retenue en environnement sécurisé</li>
+                <li><span class="icon">🚀</span><strong>Déployer</strong> les solutions en environnement sécurisé</li>
                 <li><span class="icon">📋</span><strong>Tester</strong> via des cas d'usage concrets d'équipe</li>
                 <li><span class="icon">📊</span><strong>Recommander</strong> la solution optimale pour un service IT</li>
             </ul>
@@ -123,20 +159,30 @@
         <!-- Slide 4: Solutions étudiées -->
         <div class="slide">
             <h1>Solutions en présence</h1>
-            <div class="two-column">
+            <div class="tree-column">
                 <div>
-                    <h3><span class="icon">💻</span>KeePassXC</h3>
-                    <ul class="bullet-point">
+                    <h3><span class="icon">💻</span>KeePass Password Safe</h3>
+                    <ul class="process-step" style="display: block;">
+                        <li><strong>Gestionnaire local</strong> et autonome</li>
+                        <li><strong>Multiplateforme</strong> (Windows, Linux, macOS via Mono)</li>
+                        <li><strong>Chiffrement</strong> AES-256</li>
+                        <li><strong>Interface classique</strong> (moins moderne)</li>
+                        <li><strong>Projet d'origine</strong> open source</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3><span class="icon">🖥️</span>KeePassXC</h3>
+                    <ul class="process-step" style="display: block;">
                         <li><strong>Gestionnaire local</strong> et autonome</li>
                         <li><strong>Multiplateforme</strong> (Windows, Linux, macOS)</li>
                         <li><strong>Chiffrement</strong> AES-256, ChaCha20, Argon2</li>
                         <li><strong>Interface moderne</strong> améliorée</li>
-                        <li><strong>Fork actif</strong> de KeePass</li>
+                        <li><strong>Fork actif</strong> de KeePass, fonctionnalités avancées</li>
                     </ul>
                 </div>
                 <div>
                     <h3><span class="icon">🌐</span>PassBolt</h3>
-                    <ul class="bullet-point">
+                    <ul class="process-step" style="display: block;">
                         <li><strong>Gestionnaire web</strong> collaboratif</li>
                         <li><strong>Chiffrement E2E</strong> via OpenPGP</li>
                         <li><strong>Interface web</strong> intuitive et responsive</li>
@@ -144,6 +190,9 @@
                         <li><strong>API REST</strong> pour intégrations DevOps</li>
                     </ul>
                 </div>
+            </div>
+            <div class="highlight-box black">
+                Pour cette étude, nous avons retenu <strong>KeePassXC</strong> pour la gestion locale et <strong>PassBolt</strong> pour la gestion collaborative.
             </div>
         </div>
 
@@ -283,7 +332,7 @@
                 <div class="step-number">3</div>
                 <div><strong>🌐 Installation from scratch </strong><br><br>Configuration de l'API Passbolt à partir de la source - sur github.</div>
             </div>
-            <div class="highlight-box">
+            <div class="highlight-box black">
                 <strong>Environnement retenu - Serveur Debian 12 : </strong> 2 cœurs et 2 Go de RAM - réseau local uniquement - Certificat Auto-signé - Serveur SMTP Gmail - Nginx et MariaDB
             </div>
         </div>
@@ -319,12 +368,12 @@
             <div class="demo-section">
                 <h3>Installation complète</h3>
                 <div class="screenshot-container">
-                    <img src="keepassxc/capture40.png" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
+                    <img src="keepassxc/Capture136.PNG" alt="Installation PassBolt terminée" class="screenshot screenshot-medium">
                 </div>
                 <div class="image-caption">Installation PassBolt terminée - Demande d'extension navigateur</div>
             </div>
-            
-            <div class="highlight-box">
+
+            <div class="highlight-box black">
                 <strong>⚠️ Attention : l'environnement doit être préalablement configuré, afin de garantir le bon déroulement de l'installation. </strong> Notre script d'installation prend en compte les spécificités de l'environnement Debian 12.
             </div>
         </div>
@@ -335,16 +384,101 @@
             <div class="demo-section">
                 <h3>Assistant d'installation et de configuration</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID12.png" alt="Terminal installation PassBolt" class="screenshot screenshot-large">
+                    <img src="keepassxc/Capture8.PNG" alt="Terminal installation PassBolt" class="screenshot screenshot-medium">
                 </div>
                 <div class="image-caption">Installation PassBolt via terminal - Génération des clés JWT</div>
             </div>
-            
-            <ul class="bullet-point">
-                <li><strong>Génération automatique</strong> des clés de sécurité</li>
-                <li><strong>Configuration base de données</strong> MariaDB</li>
-                <li><strong>Paramétrage HTTPS</strong> avec certificats SSL</li>
-            </ul>
+        </div>
+        <div class="slide">
+            <h1>Installation PassBolt - Interface web</h1>
+            <div class="demo-section">
+                <h3>Check Système</h3>
+                <div class="screenshot-container">
+                    <img src="keepassxc/Capture9.PNG" alt="Terminal installation PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Vérification de l'environnement système</div>
+            </div>
+        </div>
+        <div class="slide">
+            <h1>Installation PassBolt - Interface web</h1>
+            <div class="demo-section">
+                <h3>Connexion de la base de données</h3>
+                <div class="screenshot-container">
+                    <img src="keepassxc/Capture10.PNG" alt="Terminal installation PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Connexion à la base de données configurée avec l'Assistant d'installation</div>
+            </div>
+        </div>
+        
+        <!-- <ul class="bullet-point">
+            <li><strong>Génération automatique</strong> des clés de sécurité</li>
+            <li><strong>Configuration base de données</strong> MariaDB</li>
+            <li><strong>Paramétrage HTTPS</strong> avec certificats SSL</li>
+        </ul> -->
+        <!-- Slide 11: Authentification PassBolt -->
+        <div class="slide">
+            <h1>Paramétrage HTTPS avec certificats SSL</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture12.PNG" alt="Connexion PassBolt" class="screenshot screenshot-small">
+                </div>
+                <div class="image-caption">Assistant de configuration de https et du certificats SSL</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Cette configuration :</strong> force les paramètres SSL à comprendre que Passbolt n'accepte pas les connexions venant des protocoles non sécurisé
+            </div>
+        </div>
+
+        <!-- Slide 11: Ajout de l'extension web -->
+        <div class="slide">
+            <h1>Ajout de l'extension web</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture13.PNG" alt="Connexion PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Télécharger l'extension sur votre navigateur</div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Ajout de l'extension web -->
+        <div class="slide">
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture14.PNG" alt="Connexion PassBolt" class="screenshot screenshot-medium">
+                </div>
+                <div class="image-caption">Configuration de l'extension PassBolt sur Firefox Browser</div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Creation de la passe phrase de la base de donnée -->
+        <div class="slide">
+            <h1>Creation d'une passe phrase de la base de donnée</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture15.PNG" alt="Connexion PassBolt" class="screenshot screenshot-small">
+                </div>
+                <div class="image-caption">Configuration du jeton de sécurité et personnalisation</div>
+            </div>
+
+            <div class="highlight-box black">
+                <strong>La phase d'après, c'est :</strong> télécharger et enreigistrer le kit de récupération de la base de données pour garantir la récupération de la base donnée en cas d'oublie ou de perte de la passe phrase. 
+            </div>
+        </div>
+
+        <!-- Slide 11: Téléchargement du kit de récupération de la clé secrète -->
+        <div class="slide">
+            <h1>Téléchargement de la clé secrète</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture16.PNG" alt="Connexion PassBolt" class="screenshot screenshot-small">
+                </div>
+                <div class="image-caption">Kit de la clé stocker en lieu sûr</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Il est conseiller :</strong>  de stocker le kit dans un dossier sécurisé et accéssible qu'au personne illigible
+            </div>
         </div>
 
         <!-- Slide 11: Authentification PassBolt -->
@@ -353,13 +487,9 @@
             <div class="demo-section">
                 <h3>Interface de connexion</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID13.png" alt="Connexion PassBolt" class="screenshot screenshot-medium">
+                    <img src="/keepassxc/Capture41.PNG" alt="Connexion PassBolt" class="screenshot screenshot-medium">
                 </div>
-                <div class="image-caption">Interface d'authentification PassBolt avec phrase de passe</div>
-            </div>
-
-            <div class="highlight-box">
-                <strong>Sécurité renforcée :</strong> Authentification par clé privée + phrase de passe + MFA optionnel
+                <div class="image-caption"><strong>Sécurité renforcée :</strong> Authentification par clé privée + phrase de passe + MFA optionnel</div>
             </div>
         </div>
 
@@ -367,9 +497,8 @@
         <div class="slide">
             <h1>Processus d'intégration collaborateur</h1>
             <div class="demo-section">
-                <h3>Invitation automatique par email</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID14.png" alt="Email invitation PassBolt" class="screenshot screenshot-large">
+                    <img src="/keepassxc/Capture88.PNG" alt="Email invitation PassBolt" class="screenshot screenshot-small">
                 </div>
                 <div class="image-caption">Email d'invitation automatique envoyé au nouvel utilisateur</div>
             </div>
@@ -393,11 +522,10 @@
         <div class="slide">
             <h1>Configuration utilisateur PassBolt</h1>
             <div class="demo-section">
-                <h3>Personnalisation du profil</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID15.png" alt="Configuration profil PassBolt" class="screenshot screenshot-medium">
+                    <img src="/keepassxc/Capture42.PNG" alt="Configuration profil PassBolt" class="screenshot screenshot-small">
                 </div>
-                <div class="image-caption">Configuration du jeton de sécurité et personnalisation</div>
+                <div class="image-caption">Personnalisation du profil</div>
             </div>
 
             <ul class="bullet-point">
@@ -407,19 +535,93 @@
             </ul>
         </div>
 
-        <!-- Slide 14: Gestion des groupes -->
+        <!-- Slide 14: Gestion des Utilisateurs -->
         <div class="slide">
-            <h1>Gestion collaborative - Groupes</h1>
+            <h1>Gestion collaborative - Utilisateurs et Groupes</h1>
             <div class="demo-section">
-                <h3>Interface de création de groupes</h3>
+                <h3>Interface de création d'un utilisateur</h3>
                 <div class="screenshot-container">
-                    <img src="https://i.imgur.com/YourImageID16.png" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                    <img src="/keepassxc/Capture126.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
                 </div>
-                <div class="image-caption">Interface de création et gestion des groupes d'utilisateurs</div>
+                <div class="image-caption">Interface de création d'un utilisateur</div>
             </div>
 
-            <div class="highlight-box">
-                <strong>Avantage collaboratif :</strong> Partage granulaire des droits et permissions par groupe
+            <div class="highlight-box black">
+                <strong>A noté :</strong> Les utilisateurs peuvent être importés à partir d'un annuaire
+            </div>
+        </div>
+
+        
+        <!-- Slide 14: Gestion des groupes -->
+        <div class="slide">
+            <div class="demo-section">
+                <h3>Suspension d'un utilisateur</h3>
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture132.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Suspension d'un utilisateur</div>
+            </div>
+
+            <div class="highlight-box black">
+                <strong>Au cas où :</strong> Un utilisateur ou son poste de travail est compromis
+            </div>
+        </div>
+
+        <!-- Slide 14: Gestion des groupes -->
+        <div class="slide">
+            <div class="demo-section">
+                <h3>Interface de création d'un Groupe</h3>
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture127.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Interface de création d'un Groupe</div>
+            </div>
+
+            <div class="highlight-box black">
+                <strong>Le Responsable </strong> peut être désigner dès la création du groupe par l'administrateur
+            </div>
+        </div>
+
+        
+        <!-- Slide 14: Gestion des ressource -->
+        <div class="slide">
+            <h1>Gestion des resources</h1>
+            <div class="demo-section">
+                <h3>Interface de création d'une ressource</h3>
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture128.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Interface de création d'une ressource</div>
+            </div>
+
+            <div class="process-step">
+                <strong>Deux moyens :</strong> 
+                <p>
+                    sur l'interface de Passbolt
+                </p>
+                <p>
+                    directerment sur le champ d'inscription à travers le remplissage automatique et la suggestion de mots de passe
+                </p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>Partage de la ressource</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture129.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Partage de la ressource créer</div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>Partage de la ressource</h1>
+            <div class="demo-section">
+                <div class="screenshot-container">
+                    <img src="/keepassxc/Capture131.PNG" alt="Création groupe PassBolt" class="screenshot screenshot-large">
+                </div>
+                <div class="image-caption">Partage de la ressource créer</div>
             </div>
         </div>
 

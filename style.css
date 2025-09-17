@@ -5,7 +5,7 @@
 }
 
 body {
-  font-family: "Arial", sans-serif;
+  font-family: "Times New Roman", serif;
   background: linear-gradient(135deg, #da0000 0%, #ff0000 100%);
   color: #333;
   overflow: hidden;
@@ -125,6 +125,12 @@ li {
   gap: 40px;
   margin-top: 20px;
 }
+.tree-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-top: 20px;
+}
 
 .comparison-table {
   width: 100%;
@@ -134,7 +140,7 @@ li {
 }
 
 .comparison-table th {
-  background: #da0000;
+  background: #343a40;
   color: white;
   padding: 15px;
   text-align: left;
@@ -150,7 +156,7 @@ li {
 }
 
 .keepass-col {
-  background: #fff3cd;
+  background: #ffffff;
 }
 
 .passbolt-col {
@@ -158,8 +164,9 @@ li {
 }
 
 .winner {
-  background: #d4edda !important;
+  background: #ff3232 !important;
   font-weight: bold;
+  color: #fff;
 }
 
 .process-step {
@@ -209,9 +216,11 @@ li {
 }
 
 .pros-box {
-  background: #d4edda;
+  background: #ffffff6d;
   padding: 20px;
+  border: 1px solid #ddd;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #ff0000;
 }
 
@@ -377,4 +386,19 @@ li {
   height: 200px;
   border: 2px solid #ddd;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.highlight-box.black {
+  background: #343a40;
+  color: white;
+}
+.card {
+  display: block;
+}
+.contexte {
+  width: 100%;
+  height: 210px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: url('/keepassxc/tech.jpg') center/cover no-repeat;
 }

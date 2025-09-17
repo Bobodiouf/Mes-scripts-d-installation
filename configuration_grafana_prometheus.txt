@@ -1,0 +1,273 @@
+# Guide Complet Grafana + Prometheus : Dashboards, Alertes & Email
+
+## 🎯 1. Configuration initiale Grafana
+
+### Accès et première connexion
+- **URL** : http://localhost:3000
+- **Login** : admin / Passer (défini dans votre docker-compose)
+
+### Ajouter Prometheus comme Data Source
+1. Aller dans **Configuration** > **Data sources**
+2. Cliquer **Add data source**
+3. Sélectionner **Prometheus**
+4. **URL** : `http://prometheus:9090`
+5. Cliquer **Save & test**
+
+---
+
+## 📊 2. Dashboards pré-configurés (Import depuis Grafana.com)
+
+### Dashboard Node Exporter (Métriques système)
+**ID Dashboard : 1860** - Node Exporter Full
+1. Aller dans **+** > **Import**
+2. Entrer l'ID : `1860`
+3. Sélectionner votre data source Prometheus
+4. Cliquer **Import**
+
+**Métriques disponibles :**
+- CPU usage, load average
+- RAM, Swap, Disk usage
+- Network I/O
+- Disk I/O
+- Température système
+
+### Dashboard Prometheus (Auto-monitoring)
+**ID Dashboard : 3662** - Prometheus 2.0 Overview
+- Métriques internes de Prometheus
+- Nombre de targets, règles d'alerte
+- Performance des scrapes
+
+### Dashboard Blackbox Exporter
+**ID Dashboard : 7587** - Prometheus Blackbox Exporter
+- Tests de connectivité HTTP/HTTPS
+- Temps de réponse
+- Codes de statut
+
+---
+
+## 🚨 3. Configuration des Alertes Grafana
+
+### Étape 1 : Configurer les Contact Points (Email)
+
+1. **Navigation** : Alerting > Contact points
+2. **Créer nouveau contact point** :
+   - **Name** : Email-Admin
+   - **Integration** : Email
+   - **Addresses** : votre-email@exemple.com
+   - **Subject** : `[ALERTE] {{ .GroupLabels.alertname }} - {{ .Status }}`
+   - **Message** : 
+   ```
+   🚨 **ALERTE SYSTÈME**
+   
+   **Alert** : {{ .GroupLabels.alertname }}
+   **Status** : {{ .Status }}
+   **Severity** : {{ .GroupLabels.severity }}
+   **Instance** : {{ .GroupLabels.instance }}
+   **Description** : {{ .GroupLabels.description }}
+   
+   **Détails** :
+   {{ range .Alerts }}
+   - {{ .Annotations.summary }}
+   {{ end }}
+   
+   **Time** : {{ .CommonLabels.grafana_folder }}
+   ```
+
+### Étape 2 : Créer des Règles d'Alerte
+
+#### Alerte CPU élevé
+1. **Alerting** > **Alert rules** > **New rule**
+2. **Configuration** :
+   - **Rule name** : High CPU Usage
+   - **Query A** : `100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)`
+   - **Condition** : `IS ABOVE 80`
+   - **Evaluation** : Every `10s` for `30s`
+
+#### Alerte RAM élevée
+- **Rule name** : High Memory Usage
+- **Query** : `((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100`
+- **Condition** : `IS ABOVE 85`
+
+#### Alerte Disque plein
+- **Rule name** : Disk Space Low
+- **Query** : `100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)`
+- **Condition** : `IS ABOVE 90`
+
+#### Alerte Service Down
+- **Rule name** : Service Down
+- **Query** : `up == 0`
+- **Condition** : `IS BELOW 1`
+
+### Étape 3 : Notification Policies
+1. **Alerting** > **Notification policies**
+2. **Edit** la politique par défaut
+3. **Contact point** : Email-Admin
+4. **Group by** : `alertname`
+5. **Group wait** : 10s
+6. **Group interval** : 5m
+7. **Repeat interval** : 12h
+
+---
+
+## 🎨 4. Dashboards Personnalisés
+
+### Dashboard Principal - Vue d'ensemble
+
+#### Panel 1 : CPU Usage
+- **Type** : Stat
+- **Query** : `100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)`
+- **Unit** : Percent (0-100)
+- **Thresholds** : Green < 50, Yellow < 80, Red >= 80
+
+#### Panel 2 : Memory Usage
+- **Type** : Gauge
+- **Query** : `((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100`
+- **Min/Max** : 0/100
+
+#### Panel 3 : Disk Usage
+- **Type** : Bar gauge
+- **Query** : `100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"})`
+
+#### Panel 4 : Network Traffic
+- **Type** : Time series
+- **Query A** : `rate(node_network_receive_bytes_total[2m]) * 8`
+- **Query B** : `rate(node_network_transmit_bytes_total[2m]) * 8`
+- **Unit** : bits/sec
+
+### Dashboard Services - Surveillance applicative
+
+#### Panel 1 : Services Status
+- **Type** : Stat
+- **Query** : `up`
+- **Value mappings** : 0 = DOWN (Red), 1 = UP (Green)
+
+#### Panel 2 : HTTP Response Time
+- **Type** : Time series  
+- **Query** : `probe_duration_seconds`
+- **Unit** : seconds
+
+---
+
+## 📧 5. Configuration Email SMTP
+
+### Option 1 : Configuration via Environment Variables
+Ajoutez dans votre `docker-compose.yml` :
+
+```yaml
+grafana:
+  environment:
+    - GF_SMTP_ENABLED=true
+    - GF_SMTP_HOST=smtp.gmail.com:587
+    - GF_SMTP_USER=votre-email@gmail.com
+    - GF_SMTP_PASSWORD=votre-mot-de-passe-app
+    - GF_SMTP_FROM_ADDRESS=votre-email@gmail.com
+    - GF_SMTP_FROM_NAME=Grafana Monitoring
+```
+
+### Option 2 : Fichier de configuration
+Créez `grafana.ini` et montez-le :
+
+```ini
+[smtp]
+enabled = true
+host = smtp.gmail.com:587
+user = votre-email@gmail.com
+password = votre-mot-de-passe-app
+from_address = votre-email@gmail.com
+from_name = Grafana Monitoring
+```
+
+---
+
+## 📈 6. Métriques Avancées et Monitoring
+
+### Métriques Business
+- **Queries personnalisées** pour vos applications
+- **SLI/SLO tracking** avec Prometheus
+- **Error rates, latency, throughput**
+
+### Variables de Dashboard
+- **Instance** : `label_values(up, instance)`
+- **Job** : `label_values(up, job)`
+- **Time range** : Sélecteur temporel
+
+### Annotations automatiques
+- **Deployments** depuis CI/CD
+- **Incidents** depuis votre système de tickets
+- **Maintenance windows**
+
+---
+
+## 🔧 7. Optimisations et Bonnes Pratiques
+
+### Performance
+- **Recording rules** pour les calculs complexes
+- **Retention policies** adaptées
+- **Dashboard templating** pour la réutilisabilité
+
+### Sécurité
+- **Role-based access** dans Grafana
+- **API keys** pour l'intégration
+- **HTTPS** en production
+
+### Alerting avancé
+- **Alert dependencies** pour éviter le spam
+- **Escalation policies** par criticité
+- **Integration** avec PagerDuty, Slack, Teams
+
+---
+
+## 🚀 8. Cas d'Usage Concrets
+
+### Infrastructure Monitoring
+- **Surveillance serveurs** : CPU, RAM, Disk, Network
+- **Services critiques** : Bases de données, web servers
+- **Capacité planning** : Prédiction des besoins
+
+### Application Monitoring
+- **Performance monitoring** : Response time, throughput
+- **Error tracking** : Taux d'erreur par service
+- **User experience** : Temps de chargement pages
+
+### Business Monitoring
+- **KPIs métier** : Ventes, conversions, utilisateurs actifs
+- **SLA monitoring** : Disponibilité services
+- **Cost monitoring** : Consommation ressources cloud
+
+---
+
+## 📋 9. Checklist de Déploiement
+
+- [ ] Prometheus collecte les métriques
+- [ ] Grafana connecté à Prometheus
+- [ ] Dashboards importés et fonctionnels
+- [ ] SMTP configuré et testé
+- [ ] Contact points email créés
+- [ ] Règles d'alerte définies et testées
+- [ ] Notification policies configurées
+- [ ] Tests d'alertes effectués
+- [ ] Documentation mise à jour
+- [ ] Formation équipes réalisée
+
+---
+
+## 🆘 10. Troubleshooting
+
+### Problèmes courants
+- **Pas de métriques** : Vérifier la connectivité réseau
+- **Alertes non reçues** : Tester la config SMTP
+- **Dashboards vides** : Vérifier les queries et timeranges
+- **Performance lente** : Optimiser les queries, ajouter des recording rules
+
+### Commandes utiles
+```bash
+# Vérifier les logs
+docker logs grafana
+docker logs prometheus
+
+# Tester connectivité
+docker exec -it grafana wget -qO- http://prometheus:9090/metrics
+
+# Recharger config Prometheus
+curl -X POST http://localhost:9090/-/reload
+```
