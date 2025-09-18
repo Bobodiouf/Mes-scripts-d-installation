@@ -1,0 +1,433 @@
+# Guide Complet : Monitoring Multi-Stack avec Prometheus & Grafana
+
+## 🎯 1. Stratégie de Monitoring Multi-Stack
+
+### Architecture actuelle
+- **Stack Monitoring** : Prometheus, Grafana, Node-Exporter, Blackbox
+- **Stack Passbolt** : Application de gestion de mots de passe
+- **Stack Wazuh** : SIEM/HIDS
+- **Autres containers** : À identifier
+
+### Approche de monitoring par couches
+1. **Infrastructure** : CPU, RAM, Disk, Network (Node-Exporter)
+2. **Containers** : Docker metrics, ressources par container
+3. **Applications** : Passbolt, Wazuh health checks
+4. **Services** : Disponibilité HTTP/HTTPS (Blackbox)
+5. **Business** : Métriques métier spécifiques
+
+---
+
+## 🔧 2. Configuration Avancée pour Multi-Stack
+
+### Étendre le réseau monitoring
+```bash
+# Connecter les autres stacks au réseau monitoring
+docker network connect monitoring passbolt_container_name
+docker network connect monitoring wazuh_container_name
+```
+
+### Mise à jour prometheus.yml pour multi-stack
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Auto-monitoring Prometheus
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Métriques système
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 5s
+
+  # Tests de connectivité
+  - job_name: 'blackbox-exporter'
+    static_configs:
+      - targets: ['blackbox-exporter:9115']
+
+  # Docker containers monitoring
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    metrics_path: '/metrics'
+
+  # Passbolt health check
+  - job_name: 'passbolt-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://passbolt_container_name/healthcheck
+          - https://passbolt.votre-domaine.com/healthcheck
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Wazuh services monitoring
+  - job_name: 'wazuh-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://wazuh.votre-domaine.com
+          - http://wazuh_container_name:55000
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Monitoring des ports critiques
+  - job_name: 'tcp-services'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - passbolt_container_name:80
+          - passbolt_container_name:443
+          - wazuh_container_name:1514
+          - wazuh_container_name:1515
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+```
+
+### Configuration Blackbox avancée
+```yaml
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: GET
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200, 201, 202]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+
+  http_post_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: POST
+      headers:
+        Content-Type: application/json
+      body: '{"health": "check"}'
+
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+
+  ssh_banner:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      query_response:
+        - expect: "^SSH-2.0-"
+
+  dns:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "votre-domaine.com"
+      query_type: "A"
+```
+
+---
+
+## 📊 3. Dashboards par Catégorie
+
+### A. Dashboard Infrastructure Globale
+
+#### Panel 1 : Vue d'ensemble système
+```promql
+# CPU Usage Global
+100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)
+
+# Memory Usage Global  
+((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100
+
+# Disk Usage
+100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"})
+
+# Load Average
+node_load1
+
+# Network I/O
+rate(node_network_receive_bytes_total[2m]) * 8
+rate(node_network_transmit_bytes_total[2m]) * 8
+```
+
+#### Panel 2 : Top Processes
+```promql
+# Top CPU consuming processes
+topk(5, rate(node_cpu_seconds_total{mode!="idle"}[2m]))
+
+# Top Memory consuming processes  
+topk(5, node_memory_Active_bytes)
+```
+
+### B. Dashboard Docker Containers
+
+#### Métriques Docker essentielles
+```promql
+# Containers running
+count(container_last_seen)
+
+# CPU per container
+rate(container_cpu_usage_seconds_total[2m]) * 100
+
+# Memory per container
+container_memory_usage_bytes / container_spec_memory_limit_bytes * 100
+
+# Network per container
+rate(container_network_receive_bytes_total[2m])
+rate(container_network_transmit_bytes_total[2m])
+
+# Disk I/O per container
+rate(container_fs_reads_bytes_total[2m])
+rate(container_fs_writes_bytes_total[2m])
+```
+
+### C. Dashboard Applications (Passbolt + Wazuh)
+
+#### Panel Passbolt
+```promql
+# Passbolt Service Status
+up{job="passbolt-http"}
+
+# Response Time
+probe_duration_seconds{job="passbolt-http"}
+
+# HTTP Status Codes
+probe_http_status_code{job="passbolt-http"}
+
+# SSL Certificate Expiry
+(probe_ssl_earliest_cert_expiry{job="passbolt-http"} - time()) / 86400
+```
+
+#### Panel Wazuh
+```promql
+# Wazuh Service Status
+up{job="wazuh-http"}
+
+# Wazuh API Response Time
+probe_duration_seconds{job="wazuh-http"}
+
+# Wazuh Ports Status
+up{job="tcp-services", instance=~".*1514|.*1515"}
+```
+
+### D. Dashboard Sécurité & Compliance
+
+#### Métriques de sécurité
+```promql
+# Failed Login Attempts (si exposé par les apps)
+increase(failed_login_attempts_total[5m])
+
+# SSL Certificates Expiring Soon
+probe_ssl_earliest_cert_expiry < (time() + 30*24*3600)
+
+# Services Down Count
+count(up == 0)
+
+# Unusual Network Activity
+rate(node_network_receive_bytes_total[5m]) > bool 1000000
+```
+
+---
+
+## 🚨 4. Alertes Spécialisées Multi-Stack
+
+### Alertes Infrastructure
+```yaml
+# CPU élevé
+- alert: HighCPUUsage
+  expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+  for: 2m
+  labels:
+    severity: warning
+    service: infrastructure
+  annotations:
+    summary: "CPU usage élevé sur {{ $labels.instance }}"
+    description: "CPU usage: {{ $value }}%"
+
+# Disque plein
+- alert: DiskSpaceLow
+  expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"}) > 90
+  for: 1m
+  labels:
+    severity: critical
+    service: infrastructure
+```
+
+### Alertes Applications
+```yaml
+# Passbolt Down
+- alert: PassboltDown
+  expr: up{job="passbolt-http"} == 0
+  for: 30s
+  labels:
+    severity: critical
+    service: passbolt
+  annotations:
+    summary: "Passbolt est indisponible"
+    description: "Le service Passbolt ne répond pas"
+
+# Wazuh Down
+- alert: WazuhDown
+  expr: up{job="wazuh-http"} == 0
+  for: 30s
+  labels:
+    severity: critical
+    service: wazuh
+  annotations:
+    summary: "Wazuh SIEM indisponible"
+    description: "Le service Wazuh ne répond pas"
+
+# SSL Certificate Expiry
+- alert: SSLCertExpiringSoon
+  expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+  for: 1h
+  labels:
+    severity: warning
+    service: ssl
+  annotations:
+    summary: "Certificat SSL expire bientôt"
+    description: "Le certificat pour {{ $labels.instance }} expire dans {{ $value }} jours"
+```
+
+### Alertes Performance
+```yaml
+# Response Time élevé
+- alert: HighResponseTime
+  expr: probe_duration_seconds > 5
+  for: 2m
+  labels:
+    severity: warning
+    service: performance
+  annotations:
+    summary: "Temps de réponse élevé"
+    description: "{{ $labels.instance }} répond en {{ $value }}s"
+
+# Container Memory High
+- alert: ContainerMemoryHigh
+  expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.85
+  for: 2m
+  labels:
+    severity: warning
+    service: docker
+  annotations:
+    summary: "Consommation mémoire élevée"
+    description: "Container {{ $labels.name }} utilise {{ $value }}% de sa mémoire"
+```
+
+---
+
+## 📈 5. Métriques Business et Applicatives
+
+### Métriques Passbolt (si API disponible)
+- Nombre d'utilisateurs actifs
+- Tentatives de connexion
+- Mots de passe créés/partagés
+- Sessions actives
+
+### Métriques Wazuh
+- Alertes de sécurité par niveau
+- Agents connectés
+- Événements traités par minute
+- Top des attaques détectées
+
+### Métriques Système Globales
+- Uptime des services
+- Temps de réponse moyen
+- Taux d'erreur par service
+- Consommation de ressources par stack
+
+---
+
+## 🛠️ 6. Mise en Œuvre Pratique
+
+### Étape 1 : Mise à jour de la configuration
+1. Mettre à jour `prometheus.yml`
+2. Mettre à jour `blackbox.yml`
+3. Redémarrer les services
+
+### Étape 2 : Import des dashboards
+1. Dashboard Infrastructure : ID 1860
+2. Dashboard Docker : ID 193
+3. Dashboard Blackbox : ID 7587
+
+### Étape 3 : Création dashboards personnalisés
+1. Dashboard Multi-Stack Overview
+2. Dashboard Applications Status
+3. Dashboard Security Monitoring
+
+### Étape 4 : Configuration des alertes
+1. Règles d'infrastructure
+2. Règles d'applications
+3. Test des notifications
+
+---
+
+## 📋 7. Checklist de Déploiement Multi-Stack
+
+- [ ] Réseaux Docker connectés
+- [ ] Configuration Prometheus étendue
+- [ ] Blackbox configuré pour tous les services
+- [ ] Dashboards importés et personnalisés
+- [ ] Alertes configurées et testées
+- [ ] Monitoring des certificats SSL
+- [ ] Monitoring des ports critiques
+- [ ] Documentation des seuils d'alerte
+- [ ] Formation équipe sur les nouveaux dashboards
+- [ ] Procédures de réponse aux alertes définies
+
+---
+
+## 🎯 8. Optimisations Avancées
+
+### Recording Rules pour performance
+```yaml
+groups:
+  - name: infrastructure.rules
+    rules:
+    - record: instance:cpu_usage:rate5m
+      expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+    
+    - record: instance:memory_usage:percentage
+      expr: ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100
+```
+
+### Retention et Storage
+```yaml
+# Dans prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'production-monitor'
+    
+# Configuration de rétention
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+```

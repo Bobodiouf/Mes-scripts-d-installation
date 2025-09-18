@@ -1,0 +1,390 @@
+# Guide Complet Alerting Grafana + Prometheus
+
+## 🎯 1. Architecture d'Alerting
+
+### Vue d'ensemble
+```
+Prometheus → Collecte métriques
+     ↓
+Grafana → Évalue les règles d'alerte  
+     ↓
+Contact Points → Email/Slack/Teams/PagerDuty
+     ↓
+Notification Policies → Routage intelligent
+     ↓
+Silences → Gestion des maintenances
+```
+
+---
+
+## 🚨 2. Configuration Contact Points
+
+### A. Contact Point Email (Principal)
+1. **Grafana** → **Alerting** → **Contact points** → **New contact point**
+
+**Configuration :**
+- **Name** : `email-admin`
+- **Integration** : Email
+- **Addresses** : `admin@votre-domaine.com`
+- **Subject** : `🚨 [{{ .Status | upper }}] {{ .GroupLabels.alertname }}`
+- **Message** :
+```html
+<h2>🚨 Alerte {{ .Status }}</h2>
+
+<table>
+<tr><td><b>Alert</b></td><td>{{ .GroupLabels.alertname }}</td></tr>
+<tr><td><b>Status</b></td><td>{{ .Status }}</td></tr>
+<tr><td><b>Severity</b></td><td>{{ .CommonLabels.severity }}</td></tr>
+<tr><td><b>Service</b></td><td>{{ .CommonLabels.service }}</td></tr>
+<tr><td><b>Instance</b></td><td>{{ .CommonLabels.instance }}</td></tr>
+</table>
+
+<h3>Détails des alertes :</h3>
+{{ range .Alerts }}
+<div style="border-left: 3px solid #ff6b6b; padding-left: 10px; margin: 10px 0;">
+<p><strong>{{ .Labels.alertname }}</strong></p>
+<p>{{ .Annotations.summary }}</p>
+<p><em>{{ .Annotations.description }}</em></p>
+<p><small>Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}</small></p>
+</div>
+{{ end }}
+
+<p><a href="{{ .ExternalURL }}">🔗 Voir dans Grafana</a></p>
+```
+
+### B. Contact Point Slack (Optionnel)
+- **Name** : `slack-ops`
+- **Integration** : Slack
+- **Webhook URL** : `https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK`
+- **Channel** : `#monitoring`
+- **Title** : `{{ .Status | title }} - {{ .GroupLabels.alertname }}`
+
+### C. Contact Point Webhook (Avancé)
+- **Name** : `webhook-custom`
+- **Integration** : Webhook
+- **URL** : `http://votre-service/webhook`
+- **HTTP Method** : POST
+
+---
+
+## ⚡ 3. Règles d'Alerte par Catégorie
+
+### A. Alertes Infrastructure Critique
+
+#### CPU Usage Élevé
+- **Rule name** : `HighCPUUsage`
+- **Query A** : `100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)`
+- **Condition** : `IS ABOVE 80`
+- **Evaluation** : Every `10s` for `2m`
+- **Labels** :
+  - `severity` = `warning`
+  - `service` = `infrastructure`
+  - `team` = `ops`
+- **Annotations** :
+  - `summary` = `CPU usage élevé sur {{ $labels.instance }}`
+  - `description` = `CPU usage: {{ printf "%.1f" $values.A.Value }}% pendant plus de 2 minutes`
+
+#### Memory Usage Critique
+- **Rule name** : `HighMemoryUsage`
+- **Query A** : `((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100`
+- **Condition** : `IS ABOVE 85`
+- **Evaluation** : Every `10s` for `1m`
+- **Labels** :
+  - `severity` = `critical`
+  - `service` = `infrastructure`
+- **Annotations** :
+  - `summary` = `Mémoire critique sur {{ $labels.instance }}`
+  - `description` = `Memory usage: {{ printf "%.1f" $values.A.Value }}%`
+
+#### Disk Space Critique
+- **Rule name** : `DiskSpaceLow`
+- **Query A** : `100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"})`
+- **Condition** : `IS ABOVE 90`
+- **Evaluation** : Every `30s` for `1m`
+- **Labels** :
+  - `severity` = `critical`
+  - `service` = `infrastructure`
+- **Annotations** :
+  - `summary` = `Espace disque critique`
+  - `description` = `Disk usage: {{ printf "%.1f" $values.A.Value }}% sur {{ $labels.instance }}`
+
+#### Load Average Élevé
+- **Rule name** : `HighLoadAverage`
+- **Query A** : `node_load5`
+- **Query B** : `count by(instance)(node_cpu_seconds_total{mode="idle"})`
+- **Condition** : `A IS ABOVE B * 2`
+- **Evaluation** : Every `30s` for `2m`
+- **Labels** :
+  - `severity` = `warning`
+  - `service` = `infrastructure`
+
+### B. Alertes Services/Applications
+
+#### Service Down
+- **Rule name** : `ServiceDown`
+- **Query A** : `up`
+- **Condition** : `IS BELOW 1`
+- **Evaluation** : Every `10s` for `30s`
+- **Labels** :
+  - `severity` = `critical`
+  - `service` = `availability`
+- **Annotations** :
+  - `summary` = `Service {{ $labels.job }} DOWN`
+  - `description` = `Le service {{ $labels.job }} sur {{ $labels.instance }} est indisponible`
+
+#### HTTP Response Time Élevé
+- **Rule name** : `HighResponseTime`
+- **Query A** : `probe_duration_seconds{job="blackbox-exporter"}`
+- **Condition** : `IS ABOVE 5`
+- **Evaluation** : Every `30s` for `1m`
+- **Labels** :
+  - `severity` = `warning`
+  - `service` = `performance`
+- **Annotations** :
+  - `summary` = `Temps de réponse élevé`
+  - `description` = `{{ $labels.instance }} répond en {{ printf "%.2f" $values.A.Value }}s`
+
+#### HTTP Status Code Error
+- **Rule name** : `HTTPStatusError`
+- **Query A** : `probe_http_status_code{job="blackbox-exporter"}`
+- **Condition** : `IS OUTSIDE RANGE 200 TO 299`
+- **Evaluation** : Every `30s` for `30s`
+- **Labels** :
+  - `severity` = `critical`
+  - `service` = `web`
+- **Annotations** :
+  - `summary` = `Erreur HTTP {{ $labels.instance }}`
+  - `description` = `Status code: {{ printf "%.0f" $values.A.Value }}`
+
+### C. Alertes SSL/Sécurité
+
+#### SSL Certificate Expiry
+- **Rule name** : `SSLCertExpiringSoon`
+- **Query A** : `(probe_ssl_earliest_cert_expiry - time()) / 86400`
+- **Condition** : `IS BELOW 30`
+- **Evaluation** : Every `1h` for `1h`
+- **Labels** :
+  - `severity` = `warning`
+  - `service` = `security`
+- **Annotations** :
+  - `summary` = `Certificat SSL expire bientôt`
+  - `description` = `Le certificat pour {{ $labels.instance }} expire dans {{ printf "%.0f" $values.A.Value }} jours`
+
+### D. Alertes Docker/Containers
+
+#### Container Down
+- **Rule name** : `ContainerDown`
+- **Query A** : `absent(rate(container_cpu_usage_seconds_total[2m]))`
+- **Condition** : `IS ABOVE 0`
+- **Labels** :
+  - `severity` = `critical`
+  - `service` = `docker`
+
+#### Container Memory Limit
+- **Rule name** : `ContainerMemoryHigh`
+- **Query A** : `container_memory_usage_bytes / container_spec_memory_limit_bytes * 100`
+- **Condition** : `IS ABOVE 85`
+- **Evaluation** : Every `30s` for `2m`
+- **Labels** :
+  - `severity` = `warning`
+  - `service` = `docker`
+
+---
+
+## 📋 4. Notification Policies (Routage Intelligent)
+
+### Politique Principale
+1. **Alerting** → **Notification policies** → **Edit** (Default policy)
+
+**Configuration :**
+- **Group by** : `alertname, instance, severity`
+- **Group wait** : `10s`
+- **Group interval** : `5m`
+- **Repeat interval** : `4h`
+- **Contact point** : `email-admin`
+
+### Politiques Spécialisées
+
+#### Politique Critique (Severity = critical)
+- **Matcher** : `severity = critical`
+- **Group wait** : `5s`
+- **Repeat interval** : `1h`
+- **Contact point** : `email-admin` + `slack-ops`
+
+#### Politique Infrastructure (Service = infrastructure)
+- **Matcher** : `service = infrastructure`
+- **Group interval** : `2m`
+- **Contact point** : `email-admin`
+
+#### Politique Applications (Service = web)
+- **Matcher** : `service = web`
+- **Group interval** : `1m`
+- **Contact point** : `email-admin` + `webhook-custom`
+
+---
+
+## 🔇 5. Gestion des Silences
+
+### Créer un Silence
+1. **Alerting** → **Silences** → **New silence**
+
+#### Maintenance Programmée
+- **Matcher** : `instance =~ "server-.*"`
+- **Start time** : Date/heure début maintenance
+- **End time** : Date/heure fin maintenance
+- **Comment** : `Maintenance programmée serveurs`
+
+#### Silence par Service
+- **Matcher** : `service = "passbolt"`
+- **Duration** : `2h`
+- **Comment** : `Déploiement Passbolt v3.x`
+
+---
+
+## 📊 6. Dashboard Alerting
+
+### Métriques d'Alerting à Monitorer
+```promql
+# Nombre d'alertes actives
+ALERTS
+
+# Alertes par severity
+count by(severity)(ALERTS{alertstate="firing"})
+
+# Top alertes les plus fréquentes
+topk(10, count by(alertname)(ALERTS))
+
+# Temps de résolution moyen
+avg(time() - ALERTS_FOR_STATE{alertstate="firing"})
+
+# Alertes silencées
+prometheus_notifications_silences_total
+```
+
+### Panel Dashboard Alerting
+- **Type** : Stat + Time Series
+- **Queries** : Métriques ci-dessus
+- **Alertes en cours** : Table avec détails
+- **Historique** : Graphique temporel
+
+---
+
+## ⚙️ 7. Configuration Avancée
+
+### Webhooks Personnalisés
+```json
+{
+  "receiver": "webhook",
+  "status": "{{ .Status }}",
+  "alerts": [
+    {
+      "status": "{{ .Status }}",
+      "labels": {{ .GroupLabels | toJSON }},
+      "annotations": {{ .CommonAnnotations | toJSON }},
+      "startsAt": "{{ .StartsAt }}",
+      "endsAt": "{{ .EndsAt }}",
+      "generatorURL": "{{ .GeneratorURL }}"
+    }
+  ],
+  "groupLabels": {{ .GroupLabels | toJSON }},
+  "commonLabels": {{ .CommonLabels | toJSON }},
+  "commonAnnotations": {{ .CommonAnnotations | toJSON }},
+  "externalURL": "{{ .ExternalURL }}"
+}
+```
+
+### Templates Personnalisés
+```go
+{{ define "__subject" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "__description" }}
+{{ if gt (len .Alerts.Firing) 0 }}
+**Alertes actives:**
+{{ range .Alerts.Firing }}
+- {{ .Annotations.summary }} ({{ .Labels.instance }})
+{{ end }}
+{{ end }}
+
+{{ if gt (len .Alerts.Resolved) 0 }}
+**Alertes résolues:**
+{{ range .Alerts.Resolved }}
+- {{ .Annotations.summary }} ({{ .Labels.instance }})
+{{ end }}
+{{ end }}
+{{ end }}
+```
+
+---
+
+## 🔧 8. Tests et Validation
+
+### Tester une Alerte
+```bash
+# Générer charge CPU pour tester
+stress --cpu 4 --timeout 300s
+
+# Remplir disque temporairement
+dd if=/dev/zero of=/tmp/large-file bs=1G count=5
+
+# Arrêter un service pour test
+docker stop nom_container
+```
+
+### Valider la Réception
+1. **Check Email** : Vérifier réception dans boîte mail
+2. **Check Grafana** : Alerting → Alert rules → Voir status
+3. **Check Logs** :
+```bash
+docker logs grafana | grep -i alert
+```
+
+---
+
+## 📈 9. Métriques de Performance Alerting
+
+### SLI/SLO pour Alerting
+- **MTTA** (Mean Time To Alert) : < 2 minutes
+- **Précision** : > 95% (peu de faux positifs)
+- **Couverture** : 100% services critiques
+- **Disponibilité** : 99.9% système alerting
+
+### Dashboard Performance Alerting
+```promql
+# Taux de faux positifs
+(increase(prometheus_rule_evaluations_total[24h]) - increase(prometheus_rule_evaluation_failures_total[24h])) / increase(prometheus_rule_evaluations_total[24h])
+
+# Latence notifications
+histogram_quantile(0.95, rate(prometheus_notifications_latency_seconds_bucket[5m]))
+```
+
+---
+
+## 📚 10. Documentation et Runbooks
+
+### Structure Runbook
+Pour chaque alerte, documenter :
+1. **Description** : Que signifie cette alerte
+2. **Impact** : Quel est l'impact business
+3. **Cause** : Causes possibles
+4. **Investigation** : Commandes de diagnostic
+5. **Résolution** : Actions correctives
+6. **Escalation** : Quand/qui contacter
+
+### Exemple Runbook HighCPUUsage
+```markdown
+## High CPU Usage
+
+**Description:** CPU usage > 80% pendant 2+ minutes
+**Impact:** Performance dégradée, risque d'indisponibilité
+**Investigation:**
+- `top` pour voir processus
+- `htop` pour vue détaillée
+- `ps aux --sort=-%cpu` pour top CPU
+**Actions:**
+1. Identifier processus gourmand
+2. Redémarrer si nécessaire
+3. Scaler ressources si récurrent
+**Escalation:** Si CPU > 95% pendant 10min → Appeler astreinte
+```
